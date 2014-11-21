@@ -26,10 +26,10 @@ public enum AlgorithmConfig
         MIP_SCHEDULING;
     }
     
-	final TravelTimeSource ttimeSource;
-    final Goal goal;
-    final TravelDisutilitySource tdisSource;
-    final AlgorithmType algorithmType;
+	public final TravelTimeSource ttimeSource;
+    public final Goal goal;
+    public final TravelDisutilitySource tdisSource;
+    public final AlgorithmType algorithmType;
 
 
     AlgorithmConfig(AlgorithmType algorithmType, Goal goal, TravelTimeSource ttimeSource,
