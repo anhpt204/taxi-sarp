@@ -2,6 +2,8 @@ package org.matsim.contrib.sarp.schedule;
 
 import org.matsim.contrib.dvrp.schedule.StayTaskImpl;
 import org.matsim.contrib.sarp.data.AbstractRequest;
+import org.matsim.contrib.sarp.data.PeopleRequest;
+import org.matsim.contrib.sarp.enums.RequestType;
 
 public class TaxiPickupStayTask extends StayTaskImpl
 	implements TaxiTaskWithRequest
@@ -18,9 +20,12 @@ public class TaxiPickupStayTask extends StayTaskImpl
 	}
 
 	@Override
-	public TaxiTaskType getTaxiTaskType() {
-		// TODO Auto-generated method stub
-		return TaxiTaskType.PICKUP_STAY;
+	public TaxiTaskType getTaxiTaskType() 
+	{
+		if(request.getType() == RequestType.PEOPLE_REQUEST)
+			return TaxiTaskType.PEOPLE_PICKUP_STAY;
+		else
+			return TaxiTaskType.PARCEL_PICKUP_STAY;
 	}
 
 	@Override

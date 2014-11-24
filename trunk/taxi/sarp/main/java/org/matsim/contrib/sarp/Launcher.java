@@ -114,7 +114,7 @@ public class Launcher
 		
 		
 		
-		return new TaxiOptimizerConfiguration(this.context, scheduler, Goal.MIN_PICKUP_TIME);
+		return new TaxiOptimizerConfiguration(this.context, scheduler, Goal.MIN_PICKUP_TIME, this.params);
 	}
 
 	/**

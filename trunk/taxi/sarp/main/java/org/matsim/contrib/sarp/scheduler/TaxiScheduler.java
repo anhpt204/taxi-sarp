@@ -11,7 +11,9 @@ import org.matsim.contrib.dvrp.schedule.DriveTask;
 import org.matsim.contrib.dvrp.schedule.Schedule;
 import org.matsim.contrib.dvrp.schedule.Schedules;
 import org.matsim.contrib.dvrp.schedule.Schedule.ScheduleStatus;
+import org.matsim.contrib.dvrp.schedule.StayTask;
 import org.matsim.contrib.dvrp.schedule.Task;
+import org.matsim.contrib.dvrp.util.LinkTimePair;
 import org.matsim.contrib.sarp.data.AbstractRequest;
 import org.matsim.contrib.sarp.schedule.TaxiDropoffDriveTask;
 import org.matsim.contrib.sarp.schedule.TaxiDropoffStayTask;
@@ -72,8 +74,55 @@ public class TaxiScheduler
         return Schedules.isLastTask(currentTask)
                 && currentTask.getTaxiTaskType() == TaxiTaskType.WAIT_STAY;
     }
-    
     /*
+     * get the earlist time that this vehicle (veh) is idle
+     */
+    public LinkTimePair getEarliestIdleness(Vehicle veh)
+    {
+    	//get current time
+    	double currentTime = context.getTime();
+    	
+    	//if current time is more than TW T1 (mean that veh is not working)
+    	if(currentTime > veh.getT1())
+    		return null;
+    	
+    	Schedule<TaxiTask> schedule = TaxiSchedules.getSchedule(veh);
+    	
+    	Link link;
+    	double time;
+    	
+    	switch (schedule.getStatus())
+		{
+		case PLANNED:
+		case STARTED:
+			TaxiTask lastTask = Schedules.getLastTask(schedule);
+			switch(lastTask.getTaxiTaskType())
+			{
+			case WAIT_STAY:
+				link = ((StayTask)lastTask).getLink();
+				time = Math.max(currentTime, lastTask.getBeginTime());
+				
+				return createValidLinkTimePair(link, time, veh);
+			default:
+				throw new IllegalStateException();
+			}
+			
+		case COMPLETED:
+			return null;
+		case UNPLANNED: //there is always at least one WAIT TASK in a schedule
+						
+		default:
+			throw new IllegalStateException();
+		}
+    }
+    
+    private LinkTimePair createValidLinkTimePair(Link link, double time,
+			Vehicle veh)
+	{
+    	return time >= veh.getT1()? null: new LinkTimePair(link, time);
+	}
+
+	/*
      * Before a vehicle execute a next task, we should check and update
      * schedule (begin time and end time of all remaining tasks)
      */
@@ -95,7 +144,8 @@ public class TaxiScheduler
     	if(!params.destinationKnown)
     	{
     		//currentTask is the last task ???
-    		if(currentTask.getTaxiTaskType() == TaxiTaskType.PICKUP_STAY)
+    		if(currentTask.getTaxiTaskType() == TaxiTaskType.PEOPLE_PICKUP_STAY
+    				|| currentTask.getTaxiTaskType() == TaxiTaskType.PARCEL_PICKUP_STAY)
     		{
     			//add DropoffDriveTask and DropoffStayTask to this schedule
     			appendDropoffAfterPickup(schedule);
@@ -193,7 +243,8 @@ public class TaxiScheduler
     				TaxiTask nextTask = tasks.get(i + 1);
     				switch(nextTask.getTaxiTaskType())
     				{
-    				case PICKUP_DRIVE:
+    				case PEOPLE_PICKUP_DRIVE:
+    				case PARCEL_PICKUP_DRIVE:
     				case CRUISE_DRIVE:
     					double endTime = task.getEndTime();
     					//if this WAIT_STAY task end before t then
@@ -218,8 +269,10 @@ public class TaxiScheduler
     			break;
     		}
     		
-    		case PICKUP_DRIVE:
-    		case DROPOFF_DRIVE:
+    		case PEOPLE_PICKUP_DRIVE:
+    		case PARCEL_PICKUP_DRIVE:
+    		case PEOPLE_DROPOFF_DRIVE:
+    		case PARCEL_DROPOFF_DRIVE:
     		case CRUISE_DRIVE:
     		{
     			//can not be shortened/lengthen, therefore must be moved
@@ -235,7 +288,8 @@ public class TaxiScheduler
     			break;
     		}
     		
-    		case PICKUP_STAY:
+    		case PEOPLE_PICKUP_STAY:
+    		case PARCEL_PICKUP_STAY:
     		{
     			//t = taxi's arrival time = begin time
     			task.setBeginTime(t);
@@ -247,7 +301,8 @@ public class TaxiScheduler
     			break;
     		}
     		
-    		case DROPOFF_STAY:
+    		case PEOPLE_DROPOFF_STAY:
+    		case PARCEL_DROPOFF_STAY:
     		{
     			//can not be shortened/lengthen, 
     			//therefore must be moved forward/backward

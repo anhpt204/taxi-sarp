@@ -16,7 +16,8 @@ public class TaxiSchedules {
 	public static final Predicate<TaxiTask> IS_PICKUP_STAY = new Predicate<TaxiTask>() {
         public boolean apply(TaxiTask t)
         {
-            return t.getTaxiTaskType() == TaxiTaskType.PICKUP_STAY;
+            return (t.getTaxiTaskType() == TaxiTaskType.PEOPLE_PICKUP_STAY)
+            		|| (t.getTaxiTaskType() == TaxiTaskType.PARCEL_PICKUP_STAY);
         };
     };
 

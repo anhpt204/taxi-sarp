@@ -7,26 +7,30 @@ import org.matsim.contrib.dvrp.schedule.DriveTask;
 import org.matsim.contrib.dvrp.schedule.Schedule;
 import org.matsim.contrib.dvrp.schedule.Task;
 import org.matsim.contrib.sarp.data.AbstractRequest;
+import org.matsim.contrib.sarp.data.ParcelRequest;
+import org.matsim.contrib.sarp.data.PeopleRequest;
+import org.matsim.contrib.sarp.enums.RequestType;
 import org.matsim.contrib.sarp.schedule.TaxiTask;
 import org.matsim.contrib.sarp.schedule.TaxiTask.TaxiTaskType;
 import org.matsim.core.mobsim.framework.events.MobsimBeforeSimStepEvent;
-
-import playground.michalm.taxi.optimizer.TaxiOptimizer;
 
 public abstract class AbstractTaxiOptimizer 
 	implements TaxiOptimizer
 {
 	protected final TaxiOptimizerConfiguration optimConfig;
 
-	protected final Collection<AbstractRequest> unplannedRequests;
+	protected final Collection<PeopleRequest> unplannedPeopleRequests;
+	protected final Collection<ParcelRequest> unplannedParcelRequests;
 
 	protected boolean requiresReoptimization = false;
 
 	public AbstractTaxiOptimizer(TaxiOptimizerConfiguration optimConfig,
-            Collection<AbstractRequest> unplannedRequests)
+            Collection<PeopleRequest> unplannedPeopleRequests,
+            Collection<ParcelRequest> unplannedParcelRequests)
 	{
 		this.optimConfig = optimConfig;
-		this.unplannedRequests = unplannedRequests;
+		this.unplannedPeopleRequests = unplannedPeopleRequests;
+		this.unplannedParcelRequests = unplannedParcelRequests;
 	}
 	
 	
@@ -52,9 +56,21 @@ public abstract class AbstractTaxiOptimizer
 	 * when a new request arrive
 	 */
 	@Override
-	public void requestSubmitted(Request request) {
-		unplannedRequests.add((AbstractRequest)request);
-		requiresReoptimization = true;
+	public void requestSubmitted(Request request) 
+	{
+		if(((AbstractRequest)request).getType() == RequestType.PEOPLE_REQUEST)
+		{
+			unplannedPeopleRequests.add((PeopleRequest)request);
+			requiresReoptimization = true;
+		}
+		else
+		{
+			unplannedParcelRequests.add((ParcelRequest)request);
+			
+			//need a strategy to re-optimize (ex: number of parcel requests)
+			if(unplannedParcelRequests.size() >= 5)
+				requiresReoptimization = true;			
+		}
 		
 	}
 
@@ -71,7 +87,7 @@ public abstract class AbstractTaxiOptimizer
 		if(!optimConfig.scheduler.getParams().destinationKnown)
 		{
 			if(newCurrentTask != null
-					&& newCurrentTask.getTaxiTaskType() == TaxiTaskType.DROPOFF_DRIVE)
+					&& newCurrentTask.getTaxiTaskType() == TaxiTaskType.PEOPLE_DROPOFF_DRIVE)
 				requiresReoptimization = true;
 		}
 		
