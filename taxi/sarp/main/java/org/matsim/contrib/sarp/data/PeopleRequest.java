@@ -37,5 +37,7 @@ public class PeopleRequest extends AbstractRequest
 	{
 		return this.maxTravelDistance;
 	}
+
+	
 	
 }

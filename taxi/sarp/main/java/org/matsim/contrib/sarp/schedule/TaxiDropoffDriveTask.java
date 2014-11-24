@@ -3,6 +3,7 @@ package org.matsim.contrib.sarp.schedule;
 import org.matsim.contrib.dvrp.router.VrpPathWithTravelData;
 import org.matsim.contrib.dvrp.schedule.DriveTaskImpl;
 import org.matsim.contrib.sarp.data.AbstractRequest;
+import org.matsim.contrib.sarp.enums.RequestType;
 
 public class TaxiDropoffDriveTask extends DriveTaskImpl
 	implements TaxiTaskWithRequest
@@ -23,9 +24,12 @@ public class TaxiDropoffDriveTask extends DriveTaskImpl
 	}
 
 	@Override
-	public TaxiTaskType getTaxiTaskType() {
-		// TODO Auto-generated method stub
-		return TaxiTaskType.DROPOFF_DRIVE;
+	public TaxiTaskType getTaxiTaskType() 
+	{
+		if(request.getType() == RequestType.PEOPLE_REQUEST)
+			return TaxiTaskType.PEOPLE_DROPOFF_DRIVE;
+		else
+			return TaxiTaskType.PARCEL_DROPOFF_DRIVE;
 	}
 
 	@Override

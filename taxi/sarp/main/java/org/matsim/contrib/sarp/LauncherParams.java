@@ -25,8 +25,8 @@ public class LauncherParams
     String eventsFile;
     String changeEventsFile;    
     AlgorithmConfig algorithmConfig;
-    Integer nearestRequestsLimit;
-    Integer nearestVehiclesLimit;
+    public Integer nearestRequestsLimit;
+    public Integer nearestVehiclesLimit;
     Boolean onlineVehicleTracker;
     Boolean advanceRequestSubmission;
     Boolean destinationKnown;

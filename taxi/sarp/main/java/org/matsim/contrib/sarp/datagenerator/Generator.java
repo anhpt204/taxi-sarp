@@ -13,7 +13,7 @@ public class Generator
 {
 	private Scenario scenario;
 	
-	private String networkFile = "./input/network.xml";
+	private String networkFile = "./input/network.vn.xml";
 
 
 	public Generator()
@@ -28,7 +28,7 @@ public class Generator
 	
 	private void write() {
 		PopulationWriter populationWriter = new PopulationWriter(this.scenario.getPopulation(), this.scenario.getNetwork());
-		populationWriter.write("./input/plans.xml.gz");
+		populationWriter.write("./input/plans.vn.xml.gz");
 		//log.info("Number of persons: " + this.scenario.getPopulation().getPersons().size());
 	}
 	

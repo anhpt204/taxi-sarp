@@ -81,6 +81,7 @@ public class GeneratePopulation
 			
 			fromActivity.setStartTime(seconds);
 			
+			
 			//assume that time window length = 10 minutes
 			fromActivity.setEndTime(seconds + 600);
 			

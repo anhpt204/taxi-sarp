@@ -3,6 +3,7 @@ package org.matsim.contrib.sarp.schedule;
 import org.matsim.contrib.dvrp.router.VrpPathWithTravelData;
 import org.matsim.contrib.dvrp.schedule.DriveTaskImpl;
 import org.matsim.contrib.sarp.data.AbstractRequest;
+import org.matsim.contrib.sarp.enums.RequestType;
 
 public class TaxiPickupDriveTask extends DriveTaskImpl
 	implements TaxiTaskWithRequest
@@ -12,7 +13,6 @@ public class TaxiPickupDriveTask extends DriveTaskImpl
 	public TaxiPickupDriveTask(VrpPathWithTravelData path, AbstractRequest request)
 	{
 		super(path);
-		// TODO Auto-generated constructor stub
 		if(request.getFromLink() != path.getToLink())
 			throw new IllegalArgumentException();
 		this.request = request;
@@ -21,20 +21,21 @@ public class TaxiPickupDriveTask extends DriveTaskImpl
 	}
 
 	@Override
-	public TaxiTaskType getTaxiTaskType() {
-		// TODO Auto-generated method stub
-		return TaxiTaskType.PICKUP_DRIVE;
+	public TaxiTaskType getTaxiTaskType() 
+	{
+		if(request.getType() == RequestType.PEOPLE_REQUEST)
+			return TaxiTaskType.PEOPLE_PICKUP_DRIVE;
+		else
+			return TaxiTaskType.PARCEL_PICKUP_DRIVE;
 	}
 
 	@Override
 	public AbstractRequest getRequest() {
-		// TODO Auto-generated method stub
 		return this.request;
 	}
 
 	@Override
 	public void removeFromRequest() {
-		// TODO Auto-generated method stub
 		this.request.setPickupDriveTask(null);
 		
 	}
