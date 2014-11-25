@@ -25,7 +25,7 @@ public class KStraightLineNearestVehicleFilter
 			Iterable<Vehicle> vehicles, AbstractRequest request)
 	{
 		Link toLink = request.getFromLink();
-		PartialSort<Vehicle> nearestVehicleSort = new PartialSort<>(k);
+		PartialSort<Vehicle> nearestVehicleSort = new PartialSort<Vehicle>(k);
 		
 		for(Vehicle veh:vehicles)
 		{

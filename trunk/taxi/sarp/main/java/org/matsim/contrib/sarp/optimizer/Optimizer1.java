@@ -30,7 +30,7 @@ public class Optimizer1 extends AbstractTaxiOptimizer
 	
 	private void getIdleVehicles()
 	{
-		idleVehicles = new HashSet<>();
+		idleVehicles = new HashSet<Vehicle>();
 		for(Vehicle veh: optimConfig.context.getVrpData().getVehicles())
 		{
 			if(optimConfig.scheduler.isIdle(veh))
@@ -51,8 +51,18 @@ public class Optimizer1 extends AbstractTaxiOptimizer
 		{
 			PeopleRequest peopleRequest = iterPeopleRequests.next();
 			
-			Iterable<Vehicle> filteredVehs = this.vehicleFilter.filterVehiclesForRequest(idleVehicles, peopleRequest);
+			Vehicle feasibleVehicle = this.optimConfig.vrpFinder.findFeasibleTaxi(idleVehicles, peopleRequest);
 			
+			//if there is not any taxi satisfied, then reject
+			if(feasibleVehicle == null)
+			{
+				unplannedPeopleRequests.remove(peopleRequest);
+			}
+			else 
+			{
+				//find a route with some parcel requests
+				
+			}
 			
 		}
 		
