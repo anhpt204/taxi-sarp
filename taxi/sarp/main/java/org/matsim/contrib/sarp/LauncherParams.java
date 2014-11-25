@@ -9,7 +9,7 @@ public class LauncherParams
 {
 	static LauncherParams readParams(String paramFile)
     {
-        Map<String, String> params = ParameterFileReader.readParametersToMap(new File(paramFile));
+        Map<String, String> params = ParameterFileReader.readParametersToMap(paramFile);
         params.put("dir", new File(paramFile).getParent() + '/');
         return new LauncherParams(params);
     }
