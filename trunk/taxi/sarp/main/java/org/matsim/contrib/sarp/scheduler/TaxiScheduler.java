@@ -2,6 +2,7 @@ package org.matsim.contrib.sarp.scheduler;
 
 import java.util.List;
 
+import org.kohsuke.rngom.parse.IllegalSchemaException;
 import org.matsim.api.core.v01.network.Link;
 import org.matsim.contrib.dvrp.MatsimVrpContext;
 import org.matsim.contrib.dvrp.data.Vehicle;
@@ -17,10 +18,13 @@ import org.matsim.contrib.dvrp.util.LinkTimePair;
 import org.matsim.contrib.sarp.data.AbstractRequest;
 import org.matsim.contrib.sarp.schedule.TaxiDropoffDriveTask;
 import org.matsim.contrib.sarp.schedule.TaxiDropoffStayTask;
+import org.matsim.contrib.sarp.schedule.TaxiPickupDriveTask;
 import org.matsim.contrib.sarp.schedule.TaxiPickupStayTask;
 import org.matsim.contrib.sarp.schedule.TaxiTask;
 import org.matsim.contrib.sarp.schedule.TaxiTask.TaxiTaskType;
 import org.matsim.contrib.sarp.schedule.TaxiWaitStayTask;
+import org.matsim.contrib.sarp.vehreqpath.VehicleRequestPath;
+import org.matsim.contrib.sarp.vehreqpath.VehicleRequestsRoute;
 
 public class TaxiScheduler 
 {
@@ -320,7 +324,80 @@ public class TaxiScheduler
     	}
     	
     	
-    	
     }
+    
+    /**
+     * Append current schedule with new tasks
+     * @param bestRoute: a new route (serve one people and more than one parcels)
+     */
+
+	public void scheduleRequests(VehicleRequestsRoute bestRoute)
+	{
+		Schedule<TaxiTask> bestSchedule = TaxiSchedules.getSchedule(bestRoute.vehicle);
+		//if PLANNED or STARTED
+		if(bestSchedule.getStatus() != ScheduleStatus.UNPLANNED)
+		{
+			//get last task of this schedule, WaitStay is always the last task status 
+			TaxiWaitStayTask lastTask = (TaxiWaitStayTask)Schedules.getLastTask(bestSchedule);
+			
+			switch(lastTask.getStatus())
+			{
+			//if last task have been planned, then we need to consider whether
+			//this waiting task should exist or not?
+			case PLANNED: //should not
+				if(lastTask.getBeginTime() == bestRoute.getPaths()[0].path.getDepartureTime())
+				{
+					//this waiting task should be removed
+					bestSchedule.removeLastTask();
+				}
+				else //should exist
+				{
+					//update end time of this waiting task
+					lastTask.setEndTime(bestRoute.getPaths()[0].path.getDepartureTime());
+				}
+				break;
+			case STARTED:
+				lastTask.setEndTime(bestRoute.getPaths()[0].path.getDepartureTime());
+				
+				break;
+			case PERFORMED:
+			default:
+				throw new IllegalStateException();
+			}
+			
+		}
+		
+		//add task to the schedule (bestSchedule)
+		for(VehicleRequestPath path: bestRoute.getPaths())
+		{
+			//drive to pickup
+			if(path.path.getToLink() == path.request.getFromLink())
+			{
+				bestSchedule.addTask(new TaxiPickupDriveTask(path.path, path.request));
+				
+				//add pickup stay
+				double t = Math.max(path.path.getArrivalTime(), path.request.getT0());
+				t += this.params.pickupDuration;
+				
+				bestSchedule.addTask(new TaxiPickupStayTask(path.path.getArrivalTime(),
+						t, path.request));
+			}
+			else
+				// drive to drop off
+				if (path.path.getToLink() == path.request.getToLink())
+				{
+					bestSchedule.addTask(new TaxiDropoffDriveTask(path.path, path.request));
+					
+					//add dropoff stay task at arrival time
+					double t = path.path.getArrivalTime();
+					bestSchedule.addTask(new TaxiDropoffStayTask(t, t+this.params.dropoffDuration, path.request));
+				}
+			
+			
+		}
+		
+		if(params.destinationKnown)
+			appendWaitAfterDropoff(bestSchedule);
+	}
 
 }

@@ -1,12 +1,16 @@
 package org.matsim.contrib.sarp;
 
+import org.matsim.analysis.LegHistogram;
 import org.matsim.api.core.v01.Scenario;
+import org.matsim.api.core.v01.population.PopulationWriter;
 import org.matsim.contrib.dvrp.MatsimVrpContext;
 import org.matsim.contrib.dvrp.MatsimVrpContextImpl;
 import org.matsim.contrib.dvrp.data.Request;
 import org.matsim.contrib.dvrp.data.VrpDataImpl;
+import org.matsim.contrib.dvrp.passenger.BeforeSimulationTripPrebooker;
 import org.matsim.contrib.dvrp.passenger.PassengerEngine;
 import org.matsim.contrib.dvrp.router.LeastCostPathCalculatorWithCache;
+import org.matsim.contrib.dvrp.router.TravelTimeCalculators;
 import org.matsim.contrib.dvrp.router.VrpPathCalculator;
 import org.matsim.contrib.dvrp.router.VrpPathCalculatorImpl;
 import org.matsim.contrib.dvrp.run.VrpLauncherUtils;
@@ -15,11 +19,21 @@ import org.matsim.contrib.dvrp.schedule.DriveTask;
 import org.matsim.contrib.dvrp.schedule.Schedule;
 import org.matsim.contrib.dvrp.schedule.Task;
 import org.matsim.contrib.dvrp.util.time.TimeDiscretizer;
+import org.matsim.contrib.dvrp.vrpagent.VrpLegs;
+import org.matsim.contrib.dvrp.vrpagent.VrpLegs.LegCreator;
 import org.matsim.contrib.dynagent.run.DynAgentLauncherUtils;
+import org.matsim.contrib.sarp.data.AbstractRequest;
+import org.matsim.contrib.sarp.data.AbstractRequest.TaxiRequestStatus;
+import org.matsim.contrib.sarp.data.ElectricVehicleReader;
+import org.matsim.contrib.sarp.optimizer.TaxiOptimizer;
 import org.matsim.contrib.sarp.optimizer.TaxiOptimizerConfiguration;
 import org.matsim.contrib.sarp.optimizer.TaxiOptimizerConfiguration.Goal;
 import org.matsim.contrib.sarp.scheduler.TaxiScheduler;
 import org.matsim.contrib.sarp.scheduler.TaxiSchedulerParams;
+import org.matsim.contrib.sarp.vehreqpath.VehicleRequestPathFinder;
+import org.matsim.core.api.experimental.events.EventsManager;
+import org.matsim.core.events.algorithms.EventWriter;
+import org.matsim.core.events.algorithms.EventWriterXML;
 import org.matsim.core.mobsim.framework.events.MobsimBeforeSimStepEvent;
 import org.matsim.core.mobsim.qsim.QSim;
 import org.matsim.core.router.Dijkstra;
@@ -27,8 +41,8 @@ import org.matsim.core.router.util.LeastCostPathCalculator;
 import org.matsim.core.router.util.TravelDisutility;
 import org.matsim.core.router.util.TravelTime;
 import org.matsim.core.trafficmonitoring.TravelTimeCalculator;
+import org.matsim.vis.otfvis.OTFVisConfigGroup.ColoringScheme;
 
-import playground.michalm.taxi.optimizer.TaxiOptimizer;
 
 public class Launcher
 {
@@ -79,7 +93,16 @@ public class Launcher
         pathCalculator = null;
     }
 	
-	void run()
+	VrpDataImpl initTaxiData(Scenario scenario, String taxiFileName)
+	{
+		VrpDataImpl taxiData = new VrpDataImpl();
+		new ElectricVehicleReader(scenario, taxiData).parse(taxiFileName);
+		
+		return taxiData;
+	}
+	
+	
+	void run(boolean warmup)
 	{
 		MatsimVrpContextImpl contextImpl = new MatsimVrpContextImpl();
 		this.context = contextImpl;
@@ -88,21 +111,91 @@ public class Launcher
 		contextImpl.setScenario(scenario);
 		
 		//vehicle data: vehicles + requests
-		VrpDataImpl taxiData = new VrpDataImpl();
+		VrpDataImpl taxiData = initTaxiData(scenario, params.taxisFile);
 		contextImpl.setVrpData(taxiData);
 		
 		//optimizer
 		TaxiOptimizerConfiguration optimizerConfig = createOptimizerConfig();
 		//create optimizer
+		TaxiOptimizer optimizer = params.algorithmConfig.createTaxiOptimizer(optimizerConfig);
+		
 		
 		QSim qsim = DynAgentLauncherUtils.initQSim(scenario);
 		contextImpl.setMobsimTimer(qsim.getSimTimer());
 		
 		//add optimizer to be a listener in simulation 
-		//qsim.addQueueSimulationListeners(optimizer);
+		qsim.addQueueSimulationListeners(optimizer);
 		
-		PassengerEngine passengerEngine = new PassengerEngine("taxi", new RequestCreator(), 
-				optimizer, contextImpl);
+		PassengerEngine passengerEngine = VrpLauncherUtils.initPassengerEngine("taxi", new RequestCreator(), 
+				optimizer, contextImpl, qsim);
+		
+		if (params.advanceRequestSubmission) {
+            // yy to my ears, this is not completely clear.  I don't think that it enables advance request submission
+            // for arbitrary times, but rather requests all trips before the simulation starts.  Doesn't it?  kai, jul'14
+
+            //Yes. For a fully-featured advanced request submission process, use TripPrebookingManager, michalm, sept'14
+            qsim.addQueueSimulationListeners(new BeforeSimulationTripPrebooker(passengerEngine));
+        }
+
+        LegCreator legCreator = params.onlineVehicleTracker ? VrpLegs
+                .createLegWithOnlineTrackerCreator(optimizer, qsim.getSimTimer())
+                : VrpLegs.LEG_WITH_OFFLINE_TRACKER_CREATOR;
+
+        TaxiActionCreator actionCreator = new TaxiActionCreator(passengerEngine, legCreator,
+                params.pickupDuration);
+
+        VrpLauncherUtils.initAgentSources(qsim, context, optimizer, actionCreator);
+
+        EventsManager events = qsim.getEventsManager();
+
+        EventWriter eventWriter = null;
+        if (params.eventsOutFile != null) {
+            eventWriter = new EventWriterXML(params.eventsOutFile);
+            events.addHandler(eventWriter);
+        }
+
+        if (warmup) {
+            if (travelTimeCalculator == null) {
+                travelTimeCalculator = TravelTimeCalculators.createTravelTimeCalculator(scenario);
+            }
+
+            events.addHandler(travelTimeCalculator);
+        }
+        //else {
+        //    optimizerConfig.scheduler.setDelaySpeedupStats(delaySpeedupStats);
+        //}
+
+        //MovingAgentsRegister mar = new MovingAgentsRegister();
+        //events.addHandler(mar);
+
+        if (params.otfVis) { // OFTVis visualization
+            DynAgentLauncherUtils.runOTFVis(qsim, false, ColoringScheme.taxicab);
+        }
+
+        //if (params.histogramOutDir != null) {
+        //    events.addHandler(legHistogram = new LegHistogram(300));
+        //}
+
+        qsim.run();
+
+        events.finishProcessing();
+
+        if (params.eventsOutFile != null) {
+            eventWriter.closeFile();
+        }
+
+        // check if all reqs have been served
+        for (Request r : taxiData.getRequests()) 
+        {
+        	AbstractRequest request = (AbstractRequest)r;
+            if (request.getStatus() != TaxiRequestStatus.PERFORMED) {
+                throw new IllegalStateException();
+            }
+        }
+
+        //if (cacheStats != null) {
+        //    cacheStats.updateStats(routerWithCache);
+        //}
 		
 	}
 	private TaxiOptimizerConfiguration createOptimizerConfig() 
@@ -112,9 +205,16 @@ public class Launcher
 		
 		TaxiScheduler scheduler = new TaxiScheduler(context, pathCalculator, schedulerParams);
 		
+		VehicleRequestPathFinder vrpFinder = new VehicleRequestPathFinder(pathCalculator, scheduler);
 		
+		return new TaxiOptimizerConfiguration(this.context, scheduler, Goal.MIN_PICKUP_TIME, this.params, vrpFinder);
+	}
+	
+	private void generateOutput()
+	{
+		PopulationWriter popWriter = new PopulationWriter(this.scenario.getPopulation(), this.scenario.getNetwork());
 		
-		return new TaxiOptimizerConfiguration(this.context, scheduler, Goal.MIN_PICKUP_TIME, this.params);
+		popWriter.write("./input/plans.vn.out.xml.gz");
 	}
 
 	/**
@@ -126,8 +226,10 @@ public class Launcher
         LauncherParams params = LauncherParams.readParams(paramsFile);
         Launcher launcher = new Launcher(params);
         launcher.initVrpPathCalculator();
-        //launcher.go(false);
-        //launcher.generateOutput();
+        launcher.run(true);
+        launcher.generateOutput();
 	}
+
+	
 
 }

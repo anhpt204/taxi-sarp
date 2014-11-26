@@ -16,19 +16,18 @@ import org.matsim.contrib.sarp.data.*;
 public class VehicleRequestPath
 {
 	public final Vehicle vehicle;
-	public final PeopleRequest peopleRequest;
-	public final Collection<ParcelRequest> parcelRequests;
+	public final AbstractRequest request;
 	public final VrpPathWithTravelData path;
 	
+	
 	public VehicleRequestPath(Vehicle vehicle, 
-			PeopleRequest peopleRequest,
-			Collection<ParcelRequest> parcelRequests,
+			AbstractRequest request,
 			VrpPathWithTravelData path)
 	{
 		this.vehicle = vehicle;
-		this.peopleRequest = peopleRequest;
-		this.parcelRequests = parcelRequests;
+		this.request = request;
 		this.path = path;
 	}
+	
 
 }
