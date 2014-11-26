@@ -11,9 +11,14 @@ import org.matsim.contrib.dvrp.data.Vehicle;
 import org.matsim.contrib.sarp.data.ParcelRequest;
 import org.matsim.contrib.sarp.data.PeopleRequest;
 import org.matsim.contrib.sarp.filter.*;
+import org.matsim.contrib.sarp.vehreqpath.PathCostCalculators;
+import org.matsim.contrib.sarp.vehreqpath.VehicleRequestPath;
+import org.matsim.contrib.sarp.vehreqpath.VehicleRequestsRoute;
 
 public class Optimizer1 extends AbstractTaxiOptimizer
 {
+	public final int MAXNUMBERPARCELS = 5;
+	
 	private Set<Vehicle> idleVehicles;
 	
 	//private final RequestFilter requestFilter;
@@ -61,6 +66,27 @@ public class Optimizer1 extends AbstractTaxiOptimizer
 			else 
 			{
 				//find a route with some parcel requests
+				VehicleRequestsRoute bestRoute = optimConfig.vrpFinder.setupRouteWithParcelsInserted(feasibleVehicle, 
+						peopleRequest, 
+						unplannedParcelRequests, 
+						MAXNUMBERPARCELS, 
+						PathCostCalculators.BEST_COST);
+				
+				//if found the best route
+				if(bestRoute != null)
+				{
+					//then build schedule for this vehicle
+					optimConfig.scheduler.scheduleRequests(bestRoute);
+					//and then remove all parcel request from unplannedParcelRequests
+					for(ParcelRequest p: bestRoute.parcelRequests)
+						unplannedParcelRequests.remove(p);
+					// and remove peopleRequest and feasibleVehicle
+					unplannedPeopleRequests.remove(peopleRequest);
+					idleVehicles.remove(feasibleVehicle);
+					
+					
+					
+				}
 				
 			}
 			

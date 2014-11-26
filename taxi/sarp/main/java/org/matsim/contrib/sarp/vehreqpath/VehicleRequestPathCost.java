@@ -13,6 +13,6 @@ package org.matsim.contrib.sarp.vehreqpath;
  */
 public interface VehicleRequestPathCost
 {
-	double getCost(VehicleRequestPath path);
+	double getCost(VehicleRequestsRoute route);
 
 }

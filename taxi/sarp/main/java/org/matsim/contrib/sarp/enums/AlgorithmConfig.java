@@ -7,23 +7,22 @@ import static org.matsim.contrib.dvrp.run.VrpLauncherUtils.TravelTimeSource.FREE
 
 import org.matsim.contrib.dvrp.run.VrpLauncherUtils.TravelDisutilitySource;
 import org.matsim.contrib.dvrp.run.VrpLauncherUtils.TravelTimeSource;
+import org.matsim.contrib.sarp.optimizer.Optimizer1;
+import org.matsim.contrib.sarp.optimizer.TaxiOptimizer;
 import org.matsim.contrib.sarp.optimizer.TaxiOptimizerConfiguration;
 import org.matsim.contrib.sarp.optimizer.TaxiOptimizerConfiguration.Goal;
 
 
 public enum AlgorithmConfig
 {	
-    NOS_TW_TD(AlgorithmType.NO_SCHEDULING, Goal.MIN_WAIT_TIME, FREE_FLOW_SPEED, DISTANCE),
+    NO(AlgorithmType.SIMPLE, Goal.MIN_WAIT_TIME, FREE_FLOW_SPEED, DISTANCE),
 
-	MIP_TW_FF(AlgorithmType.MIP_SCHEDULING, Goal.MIN_WAIT_TIME, FREE_FLOW_SPEED, TIME);
+	MIP_TW_FF(AlgorithmType.MIP, Goal.MIN_WAIT_TIME, FREE_FLOW_SPEED, TIME);
 	 
 	static enum AlgorithmType
     {
-        NO_SCHEDULING, //
-        ONE_TIME_SCHEDULING, //
-        RE_SCHEDULING, //
-        AP_SCHEDULING, //
-        MIP_SCHEDULING;
+		SIMPLE,
+		MIP
     }
     
 	public final TravelTimeSource ttimeSource;
@@ -40,5 +39,18 @@ public enum AlgorithmConfig
         this.tdisSource = tdisSource;
         this.algorithmType = algorithmType;
     }
+    
+    
+    public TaxiOptimizer createTaxiOptimizer(TaxiOptimizerConfiguration optimizerConfig)
+    {
+    	switch(algorithmType)
+    	{
+    	case SIMPLE:
+    		return new Optimizer1(optimizerConfig);
+    	default:
+    		return null;
+    	}
+    }
+
 
 }

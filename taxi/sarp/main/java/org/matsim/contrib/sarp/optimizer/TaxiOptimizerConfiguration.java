@@ -2,6 +2,7 @@ package org.matsim.contrib.sarp.optimizer;
 
 import org.matsim.contrib.dvrp.MatsimVrpContext;
 import org.matsim.contrib.sarp.LauncherParams;
+import org.matsim.contrib.sarp.enums.AlgorithmConfig;
 import org.matsim.contrib.sarp.scheduler.TaxiScheduler;
 import org.matsim.contrib.sarp.vehreqpath.VehicleRequestPathFinder;
 
@@ -28,5 +29,5 @@ public class TaxiOptimizerConfiguration
     	this.params = params;
     	this.vrpFinder = vrpFinder;
     }
-
+    
 }

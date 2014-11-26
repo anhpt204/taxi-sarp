@@ -52,6 +52,8 @@ public class LauncherParams
         eventsFile = getFilePath("eventsFile");
         changeEventsFile = getFilePath("changeEventsFile");
 
+        String alg = params.get("algorithmConfig");
+        
         algorithmConfig = AlgorithmConfig.valueOf(params.get("algorithmConfig"));
 
         nearestRequestsLimit = getInteger("nearestRequestsLimit");
