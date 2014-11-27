@@ -92,8 +92,6 @@
 	<classpathentry kind="lib" path="libs/javax.inject-1.jar"/>
 	<classpathentry kind="lib" path="libs/jsr94-j2ee.rar"/>
 	<classpathentry kind="lib" path="libs/guava.jar"/>
-	<classpathentry kind="lib" path="libs/gurobi-5.6.2.jar"/>
-	<classpathentry kind="lib" path="libs/util-0.0.1-SNAPSHOT.jar"/>
 	<classpathentry kind="lib" path="/home/tuananh/Documents/projects/michalm/lib/gurobi-5.6.2.jar"/>
 	<classpathentry kind="lib" path="/home/tuananh/Documents/projects/michalm/lib/util-0.0.1-SNAPSHOT.jar"/>
 	<classpathentry kind="output" path="bin"/>

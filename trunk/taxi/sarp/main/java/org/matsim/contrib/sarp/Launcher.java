@@ -1,5 +1,7 @@
 package org.matsim.contrib.sarp;
 
+import java.util.List;
+
 import org.matsim.analysis.LegHistogram;
 import org.matsim.api.core.v01.Scenario;
 import org.matsim.api.core.v01.population.PopulationWriter;
@@ -15,6 +17,7 @@ import org.matsim.contrib.dvrp.router.VrpPathCalculator;
 import org.matsim.contrib.dvrp.router.VrpPathCalculatorImpl;
 import org.matsim.contrib.dvrp.run.VrpLauncherUtils;
 import org.matsim.contrib.dvrp.run.VrpLauncherUtils.TravelTimeSource;
+import org.matsim.contrib.dvrp.run.VrpPopulationUtils;
 import org.matsim.contrib.dvrp.schedule.DriveTask;
 import org.matsim.contrib.dvrp.schedule.Schedule;
 import org.matsim.contrib.dvrp.schedule.Task;
@@ -30,6 +33,7 @@ import org.matsim.contrib.sarp.optimizer.TaxiOptimizerConfiguration;
 import org.matsim.contrib.sarp.optimizer.TaxiOptimizerConfiguration.Goal;
 import org.matsim.contrib.sarp.scheduler.TaxiScheduler;
 import org.matsim.contrib.sarp.scheduler.TaxiSchedulerParams;
+import org.matsim.contrib.sarp.util.PersonCreator;
 import org.matsim.contrib.sarp.vehreqpath.VehicleRequestPathFinder;
 import org.matsim.core.api.experimental.events.EventsManager;
 import org.matsim.core.events.algorithms.EventWriter;
@@ -61,6 +65,12 @@ public class Launcher
 		this.scenario = VrpLauncherUtils.initScenario(params.netFile, params.plansFile);
 		
 		//load requests
+		
+		if(params.taxiCustomersFile != null)
+		{
+			List<String> passangerIds = PersonCreator.readTaxiCustomerIds(params.taxiCustomersFile);
+			VrpPopulationUtils.convertLegModes(passangerIds, RequestCreator.MODE, scenario);
+		}
 		
 	}
 	
@@ -126,7 +136,7 @@ public class Launcher
 		//add optimizer to be a listener in simulation 
 		qsim.addQueueSimulationListeners(optimizer);
 		
-		PassengerEngine passengerEngine = VrpLauncherUtils.initPassengerEngine("taxi", new RequestCreator(), 
+		PassengerEngine passengerEngine = VrpLauncherUtils.initPassengerEngine(RequestCreator.MODE, new RequestCreator(), 
 				optimizer, contextImpl, qsim);
 		
 		if (params.advanceRequestSubmission) {
@@ -222,7 +232,8 @@ public class Launcher
 	 */
 	public static void main(String[] args)
 	{
-    	String paramsFile = "./input/params.in";
+		String paramsFile = "./input/mielec/params.in";
+    	//String paramsFile = "./input/params.in";
         LauncherParams params = LauncherParams.readParams(paramsFile);
         Launcher launcher = new Launcher(params);
         launcher.initVrpPathCalculator();

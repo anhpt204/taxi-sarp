@@ -1,17 +1,14 @@
 #file with the network
-netFile            network.xml
+netFile            network.vn.xml
 
 #population
-plansFile          20.plans.xml.gz
+plansFile          plans.vn.xml.gz
 
 #agents who will call a taxi instead of travelling by car (from 1% to 4% of the population)
-taxiCustomersFile      taxiCustomers_4.0.txt
+taxiCustomersFile      requests.txt
 
 #taxicabs (25 of 50)
-#taxisFile              taxis-25.xml
-
-#taxiranks (currently 0)
-#ranksFile              taxi_ranks-0.xml
+taxisFile              taxis-50.xml
 
 #used for calculating travel times based on earlier iterations (simulations)
 #eventsFile             ------
@@ -20,7 +17,7 @@ taxiCustomersFile      taxiCustomers_4.0.txt
 #changeEventsFile       ------
 
 #type of the available dispatching algorithms
-#algorithmConfig        NOS_DSE_FF
+algorithmConfig        NO
 
 #limit Dijkstra algorithm to the n nearest requests relatie to a given vehicle (based on straight-line distance)
 nearestRequestsLimit    25
@@ -44,7 +41,7 @@ pickupDuration         120
 dropoffDuration        60
 
 #(on/off) visualization
-otfVis		true
+#otfVis		true
 
 #directory where various output info is stored
 #vrpOutDir              vrp_output
