@@ -34,6 +34,7 @@ import org.matsim.contrib.sarp.optimizer.TaxiOptimizerConfiguration.Goal;
 import org.matsim.contrib.sarp.scheduler.TaxiScheduler;
 import org.matsim.contrib.sarp.scheduler.TaxiSchedulerParams;
 import org.matsim.contrib.sarp.util.PersonCreator;
+import org.matsim.contrib.sarp.util.VrpUtilities;
 import org.matsim.contrib.sarp.vehreqpath.VehicleRequestPathFinder;
 import org.matsim.core.api.experimental.events.EventsManager;
 import org.matsim.core.events.algorithms.EventWriter;
@@ -68,7 +69,7 @@ public class Launcher
 		
 		if(params.taxiCustomersFile != null)
 		{
-			List<String> passangerIds = PersonCreator.readTaxiCustomerIds(params.taxiCustomersFile);
+			List<String> passangerIds = VrpUtilities.readTaxiCustomerIds(params.taxiCustomersFile);
 			VrpPopulationUtils.convertLegModes(passangerIds, RequestCreator.MODE, scenario);
 		}
 		
