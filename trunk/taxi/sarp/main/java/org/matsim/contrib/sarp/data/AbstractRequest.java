@@ -191,5 +191,10 @@ public class AbstractRequest extends RequestImpl
 	public RequestType getType() {
 		return type;
 	}
+	
+	public void setType(RequestType type)
+	{
+		this.type = type;
+	}
 
 }
