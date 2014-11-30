@@ -33,6 +33,7 @@ import org.matsim.core.mobsim.framework.MobsimAgent;
 import org.matsim.core.mobsim.framework.MobsimPassengerAgent;
 import org.matsim.core.mobsim.qsim.InternalInterface;
 import org.matsim.core.mobsim.qsim.QSim;
+import org.matsim.core.mobsim.qsim.agents.PopulationAgentSource;
 import org.matsim.core.mobsim.qsim.interfaces.DepartureHandler;
 import org.matsim.core.mobsim.qsim.interfaces.MobsimEngine;
 
@@ -45,13 +46,13 @@ import org.matsim.core.mobsim.qsim.interfaces.MobsimEngine;
  * future requests
  */
 public class SSARPassengerEngine
-	implements MobsimEngine, DepartureHandler
+	extends PassengerEngine
 {
 	
 	private final String mode;
 	
 	private final MatsimVrpContext context;
-	private final PassengerRequestCreator requestCreator;
+	private final SSARPassengerRequestCreator requestCreator;
 	private final VrpOptimizer optimizer;
 	
     private final AdvancedRequestStorage advancedRequestStorage;
@@ -73,12 +74,14 @@ public class SSARPassengerEngine
 	private Map<Id<Person>, AbstractRequest> scheduledRequests = new HashMap<>();
 	
 	public SSARPassengerEngine(String mode,
-			PassengerRequestCreator requestCreator, VrpOptimizer optimizer,
+			SSARPassengerRequestCreator requestCreator, VrpOptimizer optimizer,
 			MatsimVrpContext context, 
 			Queue<RequestEntry> sortedSubmissionTimeQueue,
 			QSim qsim,
 			double timeStep)
 	{
+		super(mode, requestCreator, optimizer, context);
+		
 		this.mode = mode;
 		this.requestCreator = requestCreator;
 		this.context = context;
@@ -86,6 +89,8 @@ public class SSARPassengerEngine
 		this.sortedSubmissionTimeQueue = sortedSubmissionTimeQueue;
 		this.qsim = qsim;
 		this.timeStep = timeStep;
+		
+		
 		
 		//start from 0
 		preTimeSnapshot = 0;
@@ -139,15 +144,18 @@ public class SSARPassengerEngine
 	
 	private AbstractRequest createAbstractRequest(
 			MobsimPassengerAgent passenger, Id<Link> fromLinkId,
-			Id<Link> toLinkId, double departureTime, double now)
+			Id<Link> toLinkId, double departureTime, double submissionTime)
 	{
 		Map<Id<Link>, ? extends Link> links = this.context.getScenario().getNetwork().getLinks();
 		Link fromLink = links.get(fromLinkId);
 		Link toLink = links.get(toLinkId);
 		Id<Request> id = Id.create(mode + "_" + nextId, Request.class);
 		
-		AbstractRequest request = (AbstractRequest) requestCreator.createRequest(id, passenger, fromLink, 
-				toLink, departureTime, departureTime, now);
+		double t0 = passenger.getActivityEndTime();
+		double t1 = t0 + 10*60;
+		
+		AbstractRequest request = (AbstractRequest) requestCreator.createRequest(id, 
+				passenger, fromLink, toLink, t0, t1, submissionTime);
 		
 		this.context.getVrpData().addRequest(request);
 		return request;
@@ -176,11 +184,6 @@ public class SSARPassengerEngine
 							AbstractRequest request = createAbstractRequest(passenger, passenger.getCurrentLinkId(), 
 									passenger.getDestinationLinkId(), agent.getActivityEndTime(), time);
 							
-							//is person or parcel?
-							if((new Random()).nextDouble() < 0.7)
-								request.setType(RequestType.PEOPLE_REQUEST);
-							else
-								request.setType(RequestType.PARCEL_REQUEST);
 							//add this request into unplannedRequest
 							unplannedRequests.add(request);
 						}
@@ -190,10 +193,23 @@ public class SSARPassengerEngine
 		}
 		else
 		{
+			//create setPopulationAgentSource and from Qsim call this method
+			//for this engine
+			
 			//forcast future requests, 
 			//and then submit all unplanned and future request to optimizer
 			
+			//get requests in next timeStep
+			//while(sortedSubmissionTimeQueue.peek().submissionTime < time + this.timeStep)
+			//{
+				
+			//}
+			//this.requestCreator.
 			
+			for(AbstractRequest request: unplannedRequests)
+			{
+				this.optimizer.requestSubmitted(request);
+			}
 		}
 		
 	}
