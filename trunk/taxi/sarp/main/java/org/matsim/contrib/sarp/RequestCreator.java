@@ -4,22 +4,27 @@ import java.io.BufferedReader;
 import java.io.FileNotFoundException;
 import java.io.FileReader;
 import java.io.IOException;
+import java.net.Authenticator.RequestorType;
+import java.util.Random;
 
 import org.matsim.api.core.v01.Id;
 import org.matsim.api.core.v01.network.Link;
 import org.matsim.contrib.dvrp.data.Request;
 import org.matsim.contrib.dvrp.data.RequestImpl;
+import org.matsim.contrib.dvrp.passenger.PassengerRequest;
 import org.matsim.contrib.dvrp.passenger.PassengerRequestCreator;
 import org.matsim.contrib.sarp.data.AbstractRequest;
 import org.matsim.contrib.sarp.data.ParcelRequest;
 import org.matsim.contrib.sarp.data.PeopleRequest;
+import org.matsim.contrib.sarp.enums.RequestType;
+import org.matsim.contrib.sarp.passenger.SSARPassengerRequestCreator;
 import org.matsim.core.mobsim.framework.MobsimPassengerAgent;
 
-public class RequestCreator implements PassengerRequestCreator
+public class RequestCreator implements SSARPassengerRequestCreator
 {
 	public static String MODE = "taxi";
 	
-	@Override
+/*	@Override
 	public AbstractRequest createRequest(Id<Request> id,
 			MobsimPassengerAgent passenger, Link fromLink, Link toLink,
 			double t0, double t1, double now)
@@ -81,6 +86,29 @@ public class RequestCreator implements PassengerRequestCreator
 			e.printStackTrace();
 		}
 		return null;
+	}
+*/
+	
+	@Override
+	public AbstractRequest forcastFutureRequests()
+	{
+		// TODO Auto-generated method stub
+		return null;
+	}
+
+	@Override
+	public PassengerRequest createRequest(Id<Request> id,
+		MobsimPassengerAgent passenger, Link fromLink, Link toLink, double t0,
+		double t1, double submissionTime)
+	{
+		double l0 = t0 + passenger.getExpectedTravelTime();
+		double l1 = l0 + 10*60;
+		RequestType type = RequestType.PARCEL_REQUEST;
+		
+		if((new Random()).nextDouble() < 0.7)
+			type = RequestType.PEOPLE_REQUEST;
+		
+		return new AbstractRequest(id, passenger, t0, t1, l0, l1, fromLink, toLink, submissionTime, type);
 	}
 
 }

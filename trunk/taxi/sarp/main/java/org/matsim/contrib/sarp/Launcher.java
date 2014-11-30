@@ -1,5 +1,7 @@
 package org.matsim.contrib.sarp;
 
+import java.io.FileNotFoundException;
+import java.io.IOException;
 import java.util.List;
 
 import org.matsim.analysis.LegHistogram;
@@ -31,10 +33,10 @@ import org.matsim.contrib.sarp.data.ElectricVehicleReader;
 import org.matsim.contrib.sarp.optimizer.TaxiOptimizer;
 import org.matsim.contrib.sarp.optimizer.TaxiOptimizerConfiguration;
 import org.matsim.contrib.sarp.optimizer.TaxiOptimizerConfiguration.Goal;
+import org.matsim.contrib.sarp.passenger.SSARPassengerEngine;
 import org.matsim.contrib.sarp.scheduler.TaxiScheduler;
 import org.matsim.contrib.sarp.scheduler.TaxiSchedulerParams;
-import org.matsim.contrib.sarp.util.PersonCreator;
-import org.matsim.contrib.sarp.util.VrpUtilities;
+import org.matsim.contrib.sarp.util.*;
 import org.matsim.contrib.sarp.vehreqpath.VehicleRequestPathFinder;
 import org.matsim.core.api.experimental.events.EventsManager;
 import org.matsim.core.events.algorithms.EventWriter;
@@ -113,7 +115,7 @@ public class Launcher
 	}
 	
 	
-	void run(boolean warmup)
+	void run(boolean warmup) throws FileNotFoundException, IOException
 	{
 		MatsimVrpContextImpl contextImpl = new MatsimVrpContextImpl();
 		this.context = contextImpl;
@@ -137,8 +139,16 @@ public class Launcher
 		//add optimizer to be a listener in simulation 
 		qsim.addQueueSimulationListeners(optimizer);
 		
-		PassengerEngine passengerEngine = VrpLauncherUtils.initPassengerEngine(RequestCreator.MODE, new RequestCreator(), 
-				optimizer, contextImpl, qsim);
+		//PassengerEngine passengerEngine = VrpLauncherUtils.initPassengerEngine(RequestCreator.MODE, new RequestCreator(), 
+		//		optimizer, contextImpl, qsim);
+		//init SSARPassengerEnggine
+		int timeStep = 15 * 60; //each 15 minutes
+		SSARPassengerEngine passengerEngine = new SSARPassengerEngine(RequestCreator.MODE,
+				new RequestCreator(), optimizer, contextImpl, 
+				VrpUtilities.getRequestEntry(params.taxiCustomersFile, contextImpl), 
+				qsim, timeStep);
+		qsim.addMobsimEngine(passengerEngine);
+		qsim.addDepartureHandler(passengerEngine);
 		
 		if (params.advanceRequestSubmission) {
             // yy to my ears, this is not completely clear.  I don't think that it enables advance request submission
@@ -230,8 +240,10 @@ public class Launcher
 
 	/**
 	 * @param args
+	 * @throws IOException 
+	 * @throws FileNotFoundException 
 	 */
-	public static void main(String[] args)
+	public static void main(String[] args) throws FileNotFoundException, IOException
 	{
 		String paramsFile = "./input/mielec/params.in";
     	//String paramsFile = "./input/params.in";
