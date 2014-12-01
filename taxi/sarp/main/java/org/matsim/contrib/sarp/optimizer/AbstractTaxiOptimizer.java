@@ -19,14 +19,14 @@ public abstract class AbstractTaxiOptimizer
 {
 	protected final TaxiOptimizerConfiguration optimConfig;
 
-	protected final Collection<PeopleRequest> unplannedPeopleRequests;
-	protected final Collection<ParcelRequest> unplannedParcelRequests;
+	protected final Collection<AbstractRequest> unplannedPeopleRequests;
+	protected final Collection<AbstractRequest> unplannedParcelRequests;
 
 	protected boolean requiresReoptimization = false;
 
 	public AbstractTaxiOptimizer(TaxiOptimizerConfiguration optimConfig,
-            Collection<PeopleRequest> unplannedPeopleRequests,
-            Collection<ParcelRequest> unplannedParcelRequests)
+            Collection<AbstractRequest> unplannedPeopleRequests,
+            Collection<AbstractRequest> unplannedParcelRequests)
 	{
 		this.optimConfig = optimConfig;
 		this.unplannedPeopleRequests = unplannedPeopleRequests;
@@ -58,18 +58,23 @@ public abstract class AbstractTaxiOptimizer
 	@Override
 	public void requestSubmitted(Request request) 
 	{
+		if (request == null)
+			return;
+		
+		AbstractRequest absRequest = (AbstractRequest)request;
+		
 		if(((AbstractRequest)request).getType() == RequestType.PEOPLE_REQUEST)
 		{
-			unplannedPeopleRequests.add((PeopleRequest)request);
+			unplannedPeopleRequests.add(absRequest);
 			requiresReoptimization = true;
 		}
 		else
 		{
-			unplannedParcelRequests.add((ParcelRequest)request);
+			unplannedParcelRequests.add(absRequest);
 			
 			//need a strategy to re-optimize (ex: number of parcel requests)
-			if(unplannedParcelRequests.size() >= 5)
-				requiresReoptimization = true;			
+			//if(unplannedParcelRequests.size() >= 5)
+			//	requiresReoptimization = true;			
 		}
 		
 	}

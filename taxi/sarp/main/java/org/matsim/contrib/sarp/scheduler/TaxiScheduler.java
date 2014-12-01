@@ -191,13 +191,15 @@ public class TaxiScheduler
     
     public void appendWaitAfterDropoff(Schedule<TaxiTask> schedule)
     {
-    	TaxiDropoffStayTask dropoffStayTask = (TaxiDropoffStayTask)Schedules.getLastTask(schedule);
+    	//TaxiDropoffStayTask dropoffStayTask = (TaxiDropoffStayTask)Schedules.getLastTask(schedule);
     	
+    	//when not consider dropoffstay
+    	TaxiDropoffDriveTask lastTask = (TaxiDropoffDriveTask)Schedules.getLastTask(schedule);
     	// add wait time
-    	double t5 = dropoffStayTask.getEndTime();
+    	double t5 = lastTask.getEndTime();
     	//each vehicle has a working time from t0 to t1 ?
     	double tEnd = Math.max(t5, schedule.getVehicle().getT1());
-    	Link link = dropoffStayTask.getLink();
+    	Link link = Schedules.getLastLinkInSchedule(schedule);
     	
     	schedule.addTask(new TaxiWaitStayTask(t5, tEnd, link));
     			
@@ -368,36 +370,39 @@ public class TaxiScheduler
 		}
 		
 		//add task to the schedule (bestSchedule)
-		for(VehicleRequestPath path: bestRoute.getPaths())
+		for(int i = 0; i < bestRoute.getPaths().length; i++)
 		{
+			VehicleRequestPath path = bestRoute.getPaths()[i];
 			//drive to pickup
-			if(path.path.getToLink() == path.request.getFromLink())
+			if(path.taskType == TaxiTaskType.PARCEL_PICKUP_DRIVE 
+					|| path.taskType == TaxiTaskType.PEOPLE_PICKUP_DRIVE)
 			{
 				bestSchedule.addTask(new TaxiPickupDriveTask(path.path, path.request));
 				
 				//add pickup stay
-				double t = Math.max(path.path.getArrivalTime(), path.request.getT0());
-				t += this.params.pickupDuration;
+				//double t = Math.max(path.path.getArrivalTime(), path.request.getT0());
+				//t += this.params.pickupDuration;
 				
-				bestSchedule.addTask(new TaxiPickupStayTask(path.path.getArrivalTime(),
-						t, path.request));
+				//bestSchedule.addTask(new TaxiPickupStayTask(path.path.getArrivalTime(),
+				//		t, path.request));
 			}
 			else
 				// drive to drop off
-				if (path.path.getToLink() == path.request.getToLink())
+				if (path.taskType == TaxiTaskType.PARCEL_DROPOFF_DRIVE
+					|| path.taskType == TaxiTaskType.PEOPLE_DROPOFF_DRIVE)
 				{
-					bestSchedule.addTask(new TaxiDropoffDriveTask(path.path, path.request));
+					TaxiDropoffDriveTask dropoffDriveTask = new TaxiDropoffDriveTask(path.path, path.request); 
+					bestSchedule.addTask(dropoffDriveTask);
 					
 					//add dropoff stay task at arrival time
-					double t = path.path.getArrivalTime();
-					bestSchedule.addTask(new TaxiDropoffStayTask(t, t+this.params.dropoffDuration, path.request));
+					//double t = path.path.getArrivalTime();
+					//bestSchedule.addTask(new TaxiDropoffStayTask(t, t+this.params.dropoffDuration, path.request));
 				}
 			
 			
 		}
 		
-		if(params.destinationKnown)
-			appendWaitAfterDropoff(bestSchedule);
+		appendWaitAfterDropoff(bestSchedule);
 	}
 
 }

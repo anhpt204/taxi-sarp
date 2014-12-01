@@ -9,6 +9,7 @@ package org.matsim.contrib.sarp.vehreqpath;
 import java.util.Collection;
 
 import org.matsim.contrib.dvrp.data.Vehicle;
+import org.matsim.contrib.sarp.data.AbstractRequest;
 import org.matsim.contrib.sarp.data.ParcelRequest;
 import org.matsim.contrib.sarp.data.PeopleRequest;
 
@@ -19,14 +20,14 @@ import org.matsim.contrib.sarp.data.PeopleRequest;
 public class VehicleRequestsRoute
 {
 	public final Vehicle vehicle;
-	public final PeopleRequest peopleRequest;
-	public final Collection<ParcelRequest> parcelRequests;
+	public final AbstractRequest peopleRequest;
+	public final Collection<AbstractRequest> parcelRequests;
 	
 	private VehicleRequestPath[] paths;
 	private double cost;
 	
-	public VehicleRequestsRoute(Vehicle vehicle, PeopleRequest peopleRequest,
-			Collection<ParcelRequest> parcelRequest,
+	public VehicleRequestsRoute(Vehicle vehicle, AbstractRequest peopleRequest,
+			Collection<AbstractRequest> parcelRequest,
 			VehicleRequestPath[] paths)
 	{
 		this.vehicle = vehicle;

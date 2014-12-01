@@ -60,7 +60,8 @@ public class SSARPassengerEngine
 
     private final Queue<RequestEntry> sortedSubmissionTimeQueue;
     
-    private final ArrayList<AbstractRequest> unplannedRequests = new ArrayList<>();
+    private ArrayList<AbstractRequest> unplannedRequests = new ArrayList<>();
+    private ArrayList<Id<Person>> submittedPeople = new ArrayList<Id<Person>>();
     
     private final QSim qsim;
     
@@ -126,8 +127,8 @@ public class SSARPassengerEngine
 		//this is an immediate request
 		if(request == null)
 		{
-			request = createAbstractRequest(passenger, fromLinkId, toLinkId, departureTime, now);
-			optimizer.requestSubmitted(request);
+			//request = createAbstractRequest(passenger, fromLinkId, toLinkId, departureTime, now);
+			//optimizer.requestSubmitted(request);
 		}
 		else // notify ready to depart
 		{
@@ -137,7 +138,8 @@ public class SSARPassengerEngine
 				awaitingPickup.notifyPassengerIsReadyForDeparture(passenger, now);
 		}
 		
-		return !request.isRejected();
+//		return !request.isRejected();
+		return true;
 	}
 
 	private int nextId = 0;
@@ -149,6 +151,12 @@ public class SSARPassengerEngine
 		Map<Id<Link>, ? extends Link> links = this.context.getScenario().getNetwork().getLinks();
 		Link fromLink = links.get(fromLinkId);
 		Link toLink = links.get(toLinkId);
+		if(toLink == null)
+		{
+			int id = (new Random()).nextInt(links.size());
+			toLink = links.get(Id.createLinkId(id));
+		}
+		
 		Id<Request> id = Id.create(mode + "_" + nextId, Request.class);
 		
 		double t0 = passenger.getActivityEndTime();
@@ -168,24 +176,35 @@ public class SSARPassengerEngine
 		if(time < preTimeSnapshot + timeStep)
 		{
 			//add all requests that have been submitted
-			while(sortedSubmissionTimeQueue.peek() != null)
+			boolean cont = true;
+			while(cont && sortedSubmissionTimeQueue.peek() != null)
 			{
+				cont = false;
 				
 				if(sortedSubmissionTimeQueue.peek().submissionTime <= time)
 				{
+					cont = true;
+					
 					RequestEntry entry = sortedSubmissionTimeQueue.poll();
 					for(MobsimAgent agent : qsim.getAgents())
 					{
 						if(agent.getId().equals(entry.person.getId()))
 						{
+							//if(submittedPeople.contains(agent.getId()))
+							//	break;
+							
+							//submittedPeople.add(agent.getId());
 							//create new request
 							
 							MobsimPassengerAgent passenger = (MobsimPassengerAgent)agent;
+							Id<Link> destinationLinkId = null;
+							
 							AbstractRequest request = createAbstractRequest(passenger, passenger.getCurrentLinkId(), 
-									passenger.getDestinationLinkId(), agent.getActivityEndTime(), time);
+									destinationLinkId, agent.getActivityEndTime(), time);
 							
 							//add this request into unplannedRequest
 							unplannedRequests.add(request);
+							
 						}
 					}
 				}
@@ -205,11 +224,14 @@ public class SSARPassengerEngine
 				
 			//}
 			//this.requestCreator.
+			System.err.println("Snapshot: " + time);
 			
 			for(AbstractRequest request: unplannedRequests)
 			{
 				this.optimizer.requestSubmitted(request);
 			}
+			unplannedRequests = new ArrayList<AbstractRequest>();
+			preTimeSnapshot = time;;
 		}
 		
 	}

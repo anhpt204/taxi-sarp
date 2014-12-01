@@ -14,8 +14,8 @@ public class TaxiDropoffDriveTask extends DriveTaskImpl
 	{
 		super(path);
 		// TODO Auto-generated constructor stub
-		if(request.getFromLink() != path.getFromLink() 
-				&& request.getToLink() != path.getToLink())
+		if(//request.getFromLink() != path.getFromLink() && 
+				request.getToLink() != path.getToLink())
 		{
 			throw new IllegalArgumentException();
 		}

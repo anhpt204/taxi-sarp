@@ -3,9 +3,12 @@ package org.matsim.contrib.sarp;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.util.List;
+import java.util.Map;
 
 import org.matsim.analysis.LegHistogram;
+import org.matsim.api.core.v01.Id;
 import org.matsim.api.core.v01.Scenario;
+import org.matsim.api.core.v01.network.Link;
 import org.matsim.api.core.v01.population.PopulationWriter;
 import org.matsim.contrib.dvrp.MatsimVrpContext;
 import org.matsim.contrib.dvrp.MatsimVrpContextImpl;
@@ -66,6 +69,8 @@ public class Launcher
 		this.params = params;
 		//initialize a scenario
 		this.scenario = VrpLauncherUtils.initScenario(params.netFile, params.plansFile);
+		
+		Map<Id<Link>, ? extends Link> links = this.scenario.getNetwork().getLinks();
 		
 		//load requests
 		
