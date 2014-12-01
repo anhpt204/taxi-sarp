@@ -9,13 +9,18 @@ package org.matsim.contrib.sarp.vehreqpath;
 import java.awt.geom.IllegalPathStateException;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.HashSet;
+import java.util.Random;
+import java.util.TreeSet;
 
 import org.matsim.api.core.v01.network.Link;
+import org.matsim.contrib.dvrp.data.Requests;
 import org.matsim.contrib.dvrp.data.Vehicle;
 import org.matsim.contrib.dvrp.router.VrpPathCalculator;
 import org.matsim.contrib.dvrp.router.VrpPathWithTravelData;
 import org.matsim.contrib.dvrp.util.LinkTimePair;
 import org.matsim.contrib.sarp.data.*;
+import org.matsim.contrib.sarp.schedule.TaxiTask.TaxiTaskType;
 import org.matsim.contrib.sarp.scheduler.TaxiScheduler;
 import org.matsim.contrib.sarp.util.CombinationGenerator;
 import org.matsim.contrib.sarp.util.PermutationGenerator;
@@ -46,7 +51,7 @@ public class VehicleRequestPathFinder
 	 * in time window
 	 */
 	public Vehicle findFeasibleTaxi(Iterable<Vehicle> idleVehicles,
-			PeopleRequest peopleRequest)
+			AbstractRequest peopleRequest)
 	{
 		Vehicle feasibleVehicle = null;
 		double bestCost = Double.MAX_VALUE;
@@ -74,9 +79,9 @@ public class VehicleRequestPathFinder
 	 * @param maxNumberParcels: maximum number of parcels in this route
 	 * @return null if not exist
 	 */
-	public VehicleRequestsRoute setupRouteWithParcelsInserted(Vehicle vehicle, 
-			PeopleRequest peopleRequest,
-			Collection<ParcelRequest> parcelRequests,
+	/*public VehicleRequestsRoute setupRouteWithParcelsInserted(Vehicle vehicle, 
+			AbstractRequest peopleRequest,
+			Collection<AbstractRequest> parcelRequests,
 			int maxNumberParcels,
 			VehicleRequestPathCost costCalculator)
 	{
@@ -84,14 +89,14 @@ public class VehicleRequestPathFinder
 		double bestCost = Double.MAX_VALUE;
 		// copy parcels?
 		// I do not understand why doing this ???
-		ArrayList<ParcelRequest> selectedParcels = new ArrayList<ParcelRequest>();
-		for(ParcelRequest parcelRequest: parcelRequests)
+		ArrayList<AbstractRequest> selectedParcels = new ArrayList<AbstractRequest>();
+		for(AbstractRequest parcelRequest: parcelRequests)
 		{
 			selectedParcels.add(parcelRequest);
 		}
 		
 		//get optimal route without parcels
-		ArrayList<ParcelRequest> parcels = new ArrayList<ParcelRequest>();
+		ArrayList<AbstractRequest> parcels = new ArrayList<AbstractRequest>();
 		VehicleRequestsRoute route = this.computeBestCostRoute(vehicle, peopleRequest, parcels, costCalculator);
 		if(route != null)
 		{
@@ -99,7 +104,7 @@ public class VehicleRequestPathFinder
 			bestRoute = route;
 		}
 		
-		ArrayList<ParcelRequest> removedParcelRequests = null;
+		ArrayList<AbstractRequest> removedParcelRequests = null;
 		//check with each size of parcels
 		for(int k = 1; k < maxNumberParcels; k++)
 		{
@@ -137,7 +142,67 @@ public class VehicleRequestPathFinder
 		return bestRoute;
 		
 	}
+	*/
+	/**
+	 * route = pickup people, [pickup parcel i, dropoff parcel i], dropoff people
+	 * @param vehicle
+	 * @param peopleRequest
+	 * @param parcelRequests
+	 * @param maxNumberParcels
+	 * @param costCalculator
+	 * @return
+	 */
+	public VehicleRequestsRoute simpleSetupRouteWithParcelsInserted(Vehicle vehicle, 
+			AbstractRequest peopleRequest,
+			Collection<AbstractRequest> parcelRequests,
+			int maxNumberParcels,
+			VehicleRequestPathCost costCalculator)
+	{
+		VehicleRequestsRoute bestRoute = null;
+		double bestCost = Double.MAX_VALUE;
+		
+				
+		
+		VehicleRequestsRoute route = this.computeCostRoute(vehicle, peopleRequest, parcelRequests, costCalculator);
+		if(route != null)
+		{
+			bestCost = route.getCost();
+			bestRoute = route;
+		}
+				
+		
+		return bestRoute;
+		
+	}
 	
+	/**
+	 * route = pickup people, [pickup parcel i, dropoff parcel i], dropoff people
+	 * @param vehicle
+	 * @param peopleRequest
+	 * @param parcelRequests
+	 * @param costCalculator
+	 * @return
+	 */
+	private VehicleRequestsRoute computeCostRoute(Vehicle vehicle,
+			AbstractRequest peopleRequest,
+			Collection<AbstractRequest> parcelRequests,
+			VehicleRequestPathCost costCalculator)
+	{		
+		
+		VehicleRequestPath[] paths = getPath(vehicle, peopleRequest, parcelRequests);
+		
+		if(paths == null)
+			return null;
+		else
+		{
+			VehicleRequestsRoute aRoute = new VehicleRequestsRoute(vehicle, 
+					peopleRequest, parcelRequests, paths );
+			double cost = costCalculator.getCost(aRoute);
+			
+			return aRoute;
+		}
+	}
+
 	/**
 	 * Method from Dr.Dung's code
 	 * @param vehicle
@@ -145,8 +210,8 @@ public class VehicleRequestPathFinder
 	 * @param parcels
 	 * @return
 	 */
-	private VehicleRequestsRoute computeBestCostRoute(Vehicle vehicle,
-			PeopleRequest peopleRequest, ArrayList<ParcelRequest> parcels,
+	/*private VehicleRequestsRoute computeBestCostRoute(Vehicle vehicle,
+			AbstractRequest peopleRequest, ArrayList<AbstractRequest> parcels,
 			VehicleRequestPathCost costCalculator)
 	{
 		//generate permutation of pickup and dropoff points
@@ -170,7 +235,7 @@ public class VehicleRequestPathFinder
 		//with each permutation
 		for(int k = 0; k < perm.size(); k++)
 		{	
-			VehicleRequestPath[] paths = getPath(vehicle, links, peopleRequest, parcels);
+	//		VehicleRequestPath[] paths = getPath(vehicle, links, peopleRequest, parcels);
 			
 			if(paths == null)
 				continue;
@@ -187,7 +252,7 @@ public class VehicleRequestPathFinder
 			}
 		}
 		return bestRoute;
-	}
+	}*/
 
 	public VehicleRequestPath findBestVehicleForRequests(
 			PeopleRequest peopleRequest,
@@ -209,7 +274,7 @@ public class VehicleRequestPathFinder
 		return null;
 	}
 	
-	private VrpPathWithTravelData getPathForPeopleRequest(Vehicle vehicle, PeopleRequest request)
+	private VrpPathWithTravelData getPathForPeopleRequest(Vehicle vehicle, AbstractRequest request)
 	{
 		LinkTimePair departure = this.scheduler.getEarliestIdleness(vehicle);
 		
@@ -227,9 +292,21 @@ public class VehicleRequestPathFinder
 	 * @return
 	 */
 	
-	private VehicleRequestPath[] getPath(Vehicle vehicle, Link[] links, 
-			PeopleRequest peopleRequest, ArrayList<ParcelRequest> parcelRequests)
+	private VehicleRequestPath[] getPath(Vehicle vehicle,  
+			AbstractRequest peopleRequest, Collection<AbstractRequest> parcelRequests)
 	{
+		//create an array of Links
+		Link[] links = new Link[2*parcelRequests.size() + 2];
+		links[0] = peopleRequest.getFromLink();
+		links[links.length-1] = peopleRequest.getToLink();
+		
+		int i = 1;
+		for(AbstractRequest parcel: parcelRequests)
+		{
+			links[i] = parcel.getFromLink();
+			links[i + 1] = parcel.getToLink();
+			i += 2;
+		}
 		//number of paths = links.length - 1 + 1 (from current location to first link)
 		VehicleRequestPath[] paths = new VehicleRequestPath[links.length];
 		
@@ -241,17 +318,21 @@ public class VehicleRequestPathFinder
 			return null;
 		
 		//fist always for people request
-		paths[0] = new VehicleRequestPath(vehicle, peopleRequest , path);
+		paths[0] = new VehicleRequestPath(vehicle, peopleRequest , path, TaxiTaskType.PEOPLE_PICKUP_DRIVE);
 		
+		VrpPathWithTravelData[] vrpPaths = new VrpPathWithTravelData[paths.length];
+		vrpPaths[0] = path;
 		
-		for(int i = 1; i < paths.length; i++)
+		for(i = 1; i < paths.length; i++)
 		{
+			if(links[i-1] == null || links[i] == null)
+				return null;
 			//departure time = arrival time of previous path + dropoff time
-			path = this.pathCalculator.calcPath(links[i-1], 
+			vrpPaths[i] = this.pathCalculator.calcPath(links[i-1], 
 					links[i], 
-					paths[i-1].path.getArrivalTime() + this.scheduler.getParams().dropoffDuration);
+					vrpPaths[i-1].getArrivalTime());// + this.scheduler.getParams().dropoffDuration);
 			
-			if(path == null)
+			if(vrpPaths[i-1] == null)
 				return null;
 			
 			//which request for this path from link i-1 to link i?
@@ -261,30 +342,24 @@ public class VehicleRequestPathFinder
 			//2. drive to dropoff at i-th link (serve some request)
 			
 			//check are there any request to pickup at link i
-			AbstractRequest request = null;
+						
+		}
+		
+		i = 1;
+		for(AbstractRequest r : parcelRequests)
+		{
+			paths[i] = new VehicleRequestPath(vehicle, r, vrpPaths[i], TaxiTaskType.PARCEL_PICKUP_DRIVE);
+			paths[i+1] = new VehicleRequestPath(vehicle, r, vrpPaths[i+1], TaxiTaskType.PARCEL_DROPOFF_DRIVE);
 			
-			//check people drop off at i
-			if(peopleRequest.getToLink() == links[i])
-			{
-				request = peopleRequest;
-			}
-			else // either parcel pickup request or parcel drop off request
-			{
-				for(ParcelRequest parcelRequest : parcelRequests)
-				{
-					if(parcelRequest.getFromLink().equals(links[i])
-							|| parcelRequest.getToLink().equals(links[i]))
-					{
-						request = parcelRequest;
-						break;
-					}
-				}
-			}
-			
-			if(request == null) //is impossible
-				throw new IllegalPathStateException();
-			
-			paths[i] = new VehicleRequestPath(vehicle, request, path);
+			i += 2;
+		}
+		
+		paths[paths.length-1] = new VehicleRequestPath(vehicle, peopleRequest, vrpPaths[vrpPaths.length-1], TaxiTaskType.PEOPLE_DROPOFF_DRIVE);
+
+		
+		for(VehicleRequestPath p : paths)
+		{
+			System.err.println(p.request.getType().toString() + ": " + p.path.getDepartureTime() + ", " + p.path.getArrivalTime());
 		}
 		
 		return paths;
