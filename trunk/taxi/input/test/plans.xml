@@ -4,6 +4,17 @@
 <population>
 
 <!-- ====================================================================== -->
+	<person id="Parcel-0" employed="no">
+		<plan selected="yes">
+			<act type="work" link="115" end_time="00:02:00" />
+			<leg mode="taxi" dep_time="00:02:00" trav_time="00:30:00">
+				<route type="links"></route>
+			</leg>
+			<act type="home" link="436" />
+		</plan>
+
+	</person>
+
 
 	<person id="taxi_passenger_0" employed="no">
 		<plan selected="yes">
