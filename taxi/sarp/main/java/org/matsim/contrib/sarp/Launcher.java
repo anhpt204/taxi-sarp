@@ -147,7 +147,7 @@ public class Launcher
 		//PassengerEngine passengerEngine = VrpLauncherUtils.initPassengerEngine(RequestCreator.MODE, new RequestCreator(), 
 		//		optimizer, contextImpl, qsim);
 		//init SSARPassengerEnggine
-		int timeStep = 15 * 60; //each 15 minutes
+		int timeStep = 5 * 60; //each 15 minutes
 		SSARPassengerEngine passengerEngine = new SSARPassengerEngine(RequestCreator.MODE,
 				new RequestCreator(), optimizer, contextImpl, 
 				VrpUtilities.getRequestEntry(params.taxiCustomersFile, contextImpl), 
@@ -195,7 +195,7 @@ public class Launcher
         //events.addHandler(mar);
 
         if (params.otfVis) { // OFTVis visualization
-            DynAgentLauncherUtils.runOTFVis(qsim, true, ColoringScheme.taxicab);
+            DynAgentLauncherUtils.runOTFVis(qsim, true, ColoringScheme.standard);
         }
 
         //if (params.histogramOutDir != null) {

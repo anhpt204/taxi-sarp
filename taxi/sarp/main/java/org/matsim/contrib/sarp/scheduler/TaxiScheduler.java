@@ -380,13 +380,13 @@ public class TaxiScheduler
 				bestSchedule.addTask(new TaxiPickupDriveTask(path.path, path.request));
 				
 				//add pickup stay
-				//double t = Math.max(path.path.getArrivalTime(), path.request.getT0());
+				double t1 = Math.max(path.path.getArrivalTime(), path.request.getT0());
 				//tam thoi de nhu vay, can phai xem lai de cap nhat route???
-				double t = path.path.getArrivalTime();
-				t += this.params.pickupDuration;
+				//double t = path.path.getArrivalTime();
 				
-				bestSchedule.addTask(new TaxiPickupStayTask(path.path.getArrivalTime(),
-						t, path.request));
+				double t2 = t1 + this.params.pickupDuration;
+				
+				bestSchedule.addTask(new TaxiPickupStayTask(path.path.getArrivalTime(), t2, path.request));
 			}
 			else
 				// drive to drop off
