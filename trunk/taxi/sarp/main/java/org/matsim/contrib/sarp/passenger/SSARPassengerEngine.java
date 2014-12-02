@@ -9,14 +9,19 @@ package org.matsim.contrib.sarp.passenger;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.Queue;
 import java.util.Random;
 import java.util.concurrent.PriorityBlockingQueue;
 
 import org.matsim.api.core.v01.Id;
+import org.matsim.api.core.v01.events.PersonEntersVehicleEvent;
+import org.matsim.api.core.v01.events.PersonLeavesVehicleEvent;
 import org.matsim.api.core.v01.network.Link;
+import org.matsim.api.core.v01.population.Activity;
 import org.matsim.api.core.v01.population.Person;
+import org.matsim.api.core.v01.population.PlanElement;
 import org.matsim.contrib.dvrp.MatsimVrpContext;
 import org.matsim.contrib.dvrp.data.Request;
 import org.matsim.contrib.dvrp.optimizer.VrpOptimizer;
@@ -29,13 +34,17 @@ import org.matsim.contrib.dvrp.passenger.PassengerRequestCreator;
 import org.matsim.contrib.sarp.data.AbstractRequest;
 import org.matsim.contrib.sarp.enums.RequestType;
 import org.matsim.contrib.sarp.util.RequestEntry;
+import org.matsim.core.api.experimental.events.EventsManager;
 import org.matsim.core.mobsim.framework.MobsimAgent;
+import org.matsim.core.mobsim.framework.MobsimDriverAgent;
 import org.matsim.core.mobsim.framework.MobsimPassengerAgent;
+import org.matsim.core.mobsim.framework.MobsimAgent.State;
 import org.matsim.core.mobsim.qsim.InternalInterface;
 import org.matsim.core.mobsim.qsim.QSim;
 import org.matsim.core.mobsim.qsim.agents.PopulationAgentSource;
 import org.matsim.core.mobsim.qsim.interfaces.DepartureHandler;
 import org.matsim.core.mobsim.qsim.interfaces.MobsimEngine;
+import org.matsim.core.mobsim.qsim.interfaces.MobsimVehicle;
 
 /**
  * @author tuananh
@@ -158,6 +167,7 @@ public class SSARPassengerEngine
 		}
 		
 		Id<Request> id = Id.create(mode + "_" + nextId, Request.class);
+		nextId += 1;
 		
 		double t0 = passenger.getActivityEndTime();
 		double t1 = t0 + 10*60;
@@ -197,13 +207,24 @@ public class SSARPassengerEngine
 							//create new request
 							
 							MobsimPassengerAgent passenger = (MobsimPassengerAgent)agent;
-							Id<Link> destinationLinkId = null;
+							Id<Link> destinationLinkId = passenger.getDestinationLinkId();
+							if(destinationLinkId == null)
+							{
+								List<PlanElement> pes = entry.person.getSelectedPlan().getPlanElements();
+								PlanElement lastPE = pes.get(pes.size() - 1);
+								if(lastPE instanceof Activity)
+								{
+									destinationLinkId = ((Activity) lastPE).getLinkId();
+								}
+							}
 							
 							AbstractRequest request = createAbstractRequest(passenger, passenger.getCurrentLinkId(), 
 									destinationLinkId, agent.getActivityEndTime(), time);
 							
 							//add this request into unplannedRequest
 							unplannedRequests.add(request);
+							
+							break;
 							
 						}
 					}
@@ -257,6 +278,58 @@ public class SSARPassengerEngine
 		
 	}
 	
+	@Override
+	public boolean pickUpPassenger(PassengerPickupActivity pickupActivity,
+			MobsimDriverAgent driver, PassengerRequest request, double now)
+	{
+		
+		MobsimPassengerAgent passenger = request.getPassenger();
+	    Id<Link> linkId = driver.getCurrentLinkId();
+
+        if (passenger.getCurrentLinkId() != linkId || passenger.getState() != State.LEG
+                || !passenger.getMode().equals(mode)) {
+            awaitingPickupStorage.storeAwaitingPickup(request, pickupActivity);
+            return false;//wait for the passenger
+        }
+
+        if (internalInterface.unregisterAdditionalAgentOnLink(passenger.getId(),
+                driver.getCurrentLinkId()) == null) {
+            //the passenger has already been picked up and is on another taxi trip
+            //seems there have been at least 2 requests made by this passenger for this location
+            awaitingPickupStorage.storeAwaitingPickup(request, pickupActivity);
+            return false;//wait for the passenger (optimistically, he/she should appear soon)
+        }
+
+        MobsimVehicle mobVehicle = driver.getVehicle();
+        mobVehicle.addPassenger(passenger);
+        passenger.setVehicle(mobVehicle);
+
+        System.err.println(driver.getId().toString() + " Pickup " + passenger.getId().toString());
+        
+        EventsManager events = internalInterface.getMobsim().getEventsManager();
+        events.processEvent(new PersonEntersVehicleEvent(now, passenger.getId(), mobVehicle.getId()));
+
+        return true;	
+	}
 	
+	@Override
+	public void dropOffPassenger(MobsimDriverAgent driver,
+			PassengerRequest request, double now)
+	{
+		MobsimPassengerAgent passenger = request.getPassenger();
+
+        MobsimVehicle mobVehicle = driver.getVehicle();
+        mobVehicle.removePassenger(passenger);
+        passenger.setVehicle(null);
+
+        System.err.println(driver.getId().toString() + " Dropoff " + passenger.getId().toString());
+
+        EventsManager events = internalInterface.getMobsim().getEventsManager();
+        events.processEvent(new PersonLeavesVehicleEvent(now, passenger.getId(), mobVehicle.getId()));
+
+        passenger.notifyArrivalOnLinkByNonNetworkMode(passenger.getDestinationLinkId());
+        passenger.endLegAndComputeNextState(now);
+        internalInterface.arrangeNextAgentState(passenger);
+	}
 
 }

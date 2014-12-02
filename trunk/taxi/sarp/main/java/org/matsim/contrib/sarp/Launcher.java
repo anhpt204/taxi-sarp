@@ -195,7 +195,7 @@ public class Launcher
         //events.addHandler(mar);
 
         if (params.otfVis) { // OFTVis visualization
-            DynAgentLauncherUtils.runOTFVis(qsim, false, ColoringScheme.taxicab);
+            DynAgentLauncherUtils.runOTFVis(qsim, true, ColoringScheme.taxicab);
         }
 
         //if (params.histogramOutDir != null) {
@@ -250,12 +250,14 @@ public class Launcher
 	 */
 	public static void main(String[] args) throws FileNotFoundException, IOException
 	{
-		String paramsFile = "./input/mielec/params.in";
+		String paramsFile = "./input/test/params.in";
+		
+//		String paramsFile = "./input/mielec/params.in";
     	//String paramsFile = "./input/params.in";
         LauncherParams params = LauncherParams.readParams(paramsFile);
         Launcher launcher = new Launcher(params);
         launcher.initVrpPathCalculator();
-        launcher.run(true);
+        launcher.run(false);
         launcher.generateOutput();
 	}
 
