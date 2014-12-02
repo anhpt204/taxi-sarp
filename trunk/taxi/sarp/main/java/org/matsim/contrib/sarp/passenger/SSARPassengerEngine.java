@@ -166,11 +166,11 @@ public class SSARPassengerEngine
 			toLink = links.get(Id.createLinkId(id));
 		}
 		
-		Id<Request> id = Id.create(mode + "_" + nextId, Request.class);
+		Id<Request> id = Id.create(passenger.getId().toString(), Request.class);
 		nextId += 1;
 		
 		double t0 = passenger.getActivityEndTime();
-		double t1 = t0 + 10*60;
+		double t1 = t0 + 2*60;
 		
 		AbstractRequest request = (AbstractRequest) requestCreator.createRequest(id, 
 				passenger, fromLink, toLink, t0, t1, submissionTime);
@@ -207,7 +207,8 @@ public class SSARPassengerEngine
 							//create new request
 							
 							MobsimPassengerAgent passenger = (MobsimPassengerAgent)agent;
-							Id<Link> destinationLinkId = passenger.getDestinationLinkId();
+							Id<Link> destinationLinkId = null;//passenger.getDestinationLinkId();
+
 							if(destinationLinkId == null)
 							{
 								List<PlanElement> pes = entry.person.getSelectedPlan().getPlanElements();
@@ -215,6 +216,7 @@ public class SSARPassengerEngine
 								if(lastPE instanceof Activity)
 								{
 									destinationLinkId = ((Activity) lastPE).getLinkId();
+									
 								}
 							}
 							

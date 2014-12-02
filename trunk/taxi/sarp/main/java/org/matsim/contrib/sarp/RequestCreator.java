@@ -105,10 +105,14 @@ public class RequestCreator implements SSARPassengerRequestCreator
 		//double l0 = t0 + passenger.getExpectedTravelTime();
 		double l0 = t0 + (new Random()).nextInt(60*60);
 		double l1 = l0 + 10*60;
-		RequestType type = RequestType.PARCEL_REQUEST;
 		
-		if((new Random()).nextDouble() < 0.4)
-			type = RequestType.PEOPLE_REQUEST;
+		String name = passenger.getId().toString();
+
+		RequestType type = RequestType.PEOPLE_REQUEST;
+
+		if(name.contains("Parcel"))
+			type = RequestType.PARCEL_REQUEST;
+		
 		
 		return new AbstractRequest(id, passenger, t0, t1, l0, l1, fromLink, toLink, submissionTime, type);
 	}

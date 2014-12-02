@@ -9,12 +9,17 @@ import java.util.TreeSet;
 
 import org.matsim.contrib.dvrp.data.Requests;
 import org.matsim.contrib.dvrp.data.Vehicle;
+import org.matsim.contrib.dvrp.util.LinkTimePair;
 import org.matsim.contrib.sarp.data.AbstractRequest;
 import org.matsim.contrib.sarp.data.ParcelRequest;
 import org.matsim.contrib.sarp.data.PeopleRequest;
 import org.matsim.contrib.sarp.filter.*;
+import org.matsim.contrib.sarp.schedule.TaxiTask.TaxiTaskType;
 import org.matsim.contrib.sarp.vehreqpath.PathCostCalculators;
+import org.matsim.contrib.sarp.vehreqpath.PathNode;
+import org.matsim.contrib.sarp.vehreqpath.PathNode.PathNodeType;
 import org.matsim.contrib.sarp.vehreqpath.VehicleRequestPath;
+import org.matsim.contrib.sarp.vehreqpath.VehicleRequestPathCost;
 import org.matsim.contrib.sarp.vehreqpath.VehicleRequestsRoute;
 
 public class Optimizer1 extends AbstractTaxiOptimizer
@@ -92,10 +97,9 @@ public class Optimizer1 extends AbstractTaxiOptimizer
 				}
 				
 				//find a route with some parcel requests
-				VehicleRequestsRoute bestRoute = optimConfig.vrpFinder.simpleSetupRouteWithParcelsInserted(feasibleVehicle, 
+				VehicleRequestsRoute bestRoute = findBestRoute(feasibleVehicle, 
 						peopleRequest, 
 						selectedParcelRequests, 
-						MAXNUMBERPARCELS, 
 						PathCostCalculators.BEST_COST);
 				
 				//if found the best route
@@ -127,6 +131,33 @@ public class Optimizer1 extends AbstractTaxiOptimizer
 		for(AbstractRequest peopleRequest: plannedPeopleRequest)
 			unplannedPeopleRequests.remove(peopleRequest);
 		
+		
+	}
+	
+	private VehicleRequestsRoute findBestRoute(Vehicle vehicle, AbstractRequest peopleRequest,
+			Collection<AbstractRequest> parcelRequests, VehicleRequestPathCost costCalculator)
+	{
+		//2 for a person, 1 for current location
+		PathNode[] nodes = new PathNode[2 + 2 * parcelRequests.size() + 1];
+		//get earlist time, location when vehicle is idle
+		LinkTimePair departure = this.optimConfig.scheduler.getEarliestIdleness(vehicle);
+
+		
+		//make a simple route
+		nodes[0] = new PathNode(departure.link, null, PathNodeType.START, departure.time);
+		nodes[1] = new PathNode(peopleRequest.getFromLink(), peopleRequest, PathNodeType.PICKUP, 0);
+		nodes[nodes.length-1] = new PathNode(peopleRequest.getToLink(), peopleRequest, PathNodeType.DROPOFF,0);
+		
+		int i = 2;
+		for(AbstractRequest parcel: parcelRequests)
+		{
+			nodes[i] = new PathNode(parcel.getFromLink(), parcel, PathNodeType.PICKUP,0);
+			nodes[i+1] = new PathNode(parcel.getToLink(), parcel, PathNodeType.DROPOFF,0);
+			i += 2;
+		}
+		
+		//generate route
+		return optimConfig.vrpFinder.getRouteAndCalculateCost(vehicle, nodes, peopleRequest, parcelRequests, costCalculator);
 		
 	}
 
