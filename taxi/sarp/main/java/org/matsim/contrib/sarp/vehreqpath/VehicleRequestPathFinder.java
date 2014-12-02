@@ -357,10 +357,10 @@ public class VehicleRequestPathFinder
 		paths[paths.length-1] = new VehicleRequestPath(vehicle, peopleRequest, vrpPaths[vrpPaths.length-1], TaxiTaskType.PEOPLE_DROPOFF_DRIVE);
 
 		
-		for(VehicleRequestPath p : paths)
-		{
-			System.err.println(p.request.getType().toString() + ": " + p.path.getDepartureTime() + ", " + p.path.getArrivalTime());
-		}
+		//for(VehicleRequestPath p : paths)
+		//{
+		//	System.err.println(p.request.getType().toString() + ": " + p.path.getDepartureTime() + ", " + p.path.getArrivalTime());
+		//}
 		
 		return paths;
 	}

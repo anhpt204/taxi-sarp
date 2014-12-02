@@ -152,10 +152,10 @@ public class TaxiScheduler
     				|| currentTask.getTaxiTaskType() == TaxiTaskType.PARCEL_PICKUP_STAY)
     		{
     			//add DropoffDriveTask and DropoffStayTask to this schedule
-    			appendDropoffAfterPickup(schedule);
+    			//appendDropoffAfterPickup(schedule);
     			
     			//add WaitStayTask after dropoffStayTask
-    			appendWaitAfterDropoff(schedule);
+    			//appendWaitAfterDropoff(schedule);
     			
     		}
     	}
@@ -191,10 +191,10 @@ public class TaxiScheduler
     
     public void appendWaitAfterDropoff(Schedule<TaxiTask> schedule)
     {
-    	//TaxiDropoffStayTask dropoffStayTask = (TaxiDropoffStayTask)Schedules.getLastTask(schedule);
+    	TaxiDropoffStayTask lastTask = (TaxiDropoffStayTask)Schedules.getLastTask(schedule);
     	
     	//when not consider dropoffstay
-    	TaxiDropoffDriveTask lastTask = (TaxiDropoffDriveTask)Schedules.getLastTask(schedule);
+    	//TaxiDropoffDriveTask lastTask = (TaxiDropoffDriveTask)Schedules.getLastTask(schedule);
     	// add wait time
     	double t5 = lastTask.getEndTime();
     	//each vehicle has a working time from t0 to t1 ?
@@ -381,10 +381,12 @@ public class TaxiScheduler
 				
 				//add pickup stay
 				//double t = Math.max(path.path.getArrivalTime(), path.request.getT0());
-				//t += this.params.pickupDuration;
+				//tam thoi de nhu vay, can phai xem lai de cap nhat route???
+				double t = path.path.getArrivalTime();
+				t += this.params.pickupDuration;
 				
-				//bestSchedule.addTask(new TaxiPickupStayTask(path.path.getArrivalTime(),
-				//		t, path.request));
+				bestSchedule.addTask(new TaxiPickupStayTask(path.path.getArrivalTime(),
+						t, path.request));
 			}
 			else
 				// drive to drop off
@@ -395,8 +397,8 @@ public class TaxiScheduler
 					bestSchedule.addTask(dropoffDriveTask);
 					
 					//add dropoff stay task at arrival time
-					//double t = path.path.getArrivalTime();
-					//bestSchedule.addTask(new TaxiDropoffStayTask(t, t+this.params.dropoffDuration, path.request));
+					double t = path.path.getArrivalTime();
+					bestSchedule.addTask(new TaxiDropoffStayTask(t, t+this.params.dropoffDuration, path.request));
 				}
 			
 			

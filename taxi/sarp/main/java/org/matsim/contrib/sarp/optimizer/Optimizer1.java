@@ -112,6 +112,11 @@ public class Optimizer1 extends AbstractTaxiOptimizer
 					idleVehicles.remove(feasibleVehicle);
 					
 					
+					//write route for each route
+					//for(VehicleRequestPath path : bestRoute.getPaths())
+					//{
+					//	System.err.println(path.vehicle.toString() + path.vehicle.getSchedule().toString());
+					//}
 					
 				}
 				
