@@ -101,6 +101,7 @@ public class RequestCreator implements SSARPassengerRequestCreator
 		MobsimPassengerAgent passenger, Link fromLink, Link toLink, double t0,
 		double t1, double submissionTime)
 	{
+		//double l0 = t0 + 30*60;
 		//double l0 = t0 + passenger.getExpectedTravelTime();
 		double l0 = t0 + (new Random()).nextInt(60*60);
 		double l1 = l0 + 10*60;
