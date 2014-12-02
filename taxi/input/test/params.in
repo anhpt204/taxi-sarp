@@ -2,7 +2,7 @@
 netFile            network.xml
 
 #population
-plansFile          plans.xml
+plansFile          plans.100.xml
 
 #agents who will call a taxi instead of travelling by car (from 1% to 4% of the population)
 #taxiCustomersFile      taxiCustomers.txt
@@ -38,10 +38,10 @@ nearestVehiclesLimit    25
 #destinationKnown
 
 #duration of a pickup
-pickupDuration         0
+pickupDuration         50
 
 #duration of a dropoff
-dropoffDuration        0
+dropoffDuration        100
 
 #(on/off) visualization
 otfVis
@@ -53,4 +53,4 @@ otfVis
 #histogramOutDir        histograms
 
 #file with output events
-#eventsOutFile          events.out.xml.gz
+eventsOutFile          events.out.xml
