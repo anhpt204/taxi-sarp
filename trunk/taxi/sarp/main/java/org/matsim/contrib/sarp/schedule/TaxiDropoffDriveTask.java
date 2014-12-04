@@ -26,7 +26,7 @@ public class TaxiDropoffDriveTask extends DriveTaskImpl
 	@Override
 	public TaxiTaskType getTaxiTaskType() 
 	{
-		if(request.getType() == RequestType.PEOPLE_REQUEST)
+		if(request.getType() == RequestType.PEOPLE)
 			return TaxiTaskType.PEOPLE_DROPOFF_DRIVE;
 		else
 			return TaxiTaskType.PARCEL_DROPOFF_DRIVE;

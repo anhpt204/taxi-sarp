@@ -98,6 +98,7 @@ public class VrpUtilities
         }
 		else
 		{
+			
 			//set all person to be taxi mode
 			Map<Id<Person>, ? extends Person> persons = context.getScenario().getPopulation().getPersons();
 			

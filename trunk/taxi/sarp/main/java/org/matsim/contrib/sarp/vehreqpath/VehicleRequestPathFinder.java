@@ -304,16 +304,16 @@ public class VehicleRequestPathFinder
 			
 			if(nodes[i+1].type == PathNodeType.PICKUP)
 			{
-				if(nodes[i+1].request.getType() == RequestType.PEOPLE_REQUEST)
+				if(nodes[i+1].request.getType() == RequestType.PEOPLE)
 					taskType = TaxiTaskType.PEOPLE_PICKUP_DRIVE;
-				else if(nodes[i+1].request.getType() == RequestType.PARCEL_REQUEST)
+				else if(nodes[i+1].request.getType() == RequestType.PARCEL)
 					taskType = TaxiTaskType.PARCEL_PICKUP_DRIVE;				
 			}
 			else if(nodes[i+1].type == PathNodeType.DROPOFF)
 			{
-				if(nodes[i+1].request.getType() == RequestType.PEOPLE_REQUEST)
+				if(nodes[i+1].request.getType() == RequestType.PEOPLE)
 					taskType = TaxiTaskType.PEOPLE_DROPOFF_DRIVE;
-				else if(nodes[i+1].request.getType() == RequestType.PARCEL_REQUEST)
+				else if(nodes[i+1].request.getType() == RequestType.PARCEL)
 					taskType = TaxiTaskType.PARCEL_DROPOFF_DRIVE;				
 			}
 				

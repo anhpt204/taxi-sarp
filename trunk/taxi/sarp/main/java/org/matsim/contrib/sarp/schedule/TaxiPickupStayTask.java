@@ -22,7 +22,7 @@ public class TaxiPickupStayTask extends StayTaskImpl
 	@Override
 	public TaxiTaskType getTaxiTaskType() 
 	{
-		if(request.getType() == RequestType.PEOPLE_REQUEST)
+		if(request.getType() == RequestType.PEOPLE)
 			return TaxiTaskType.PEOPLE_PICKUP_STAY;
 		else
 			return TaxiTaskType.PARCEL_PICKUP_STAY;
