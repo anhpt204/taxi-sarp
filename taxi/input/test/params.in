@@ -1,5 +1,5 @@
 #file with the network
-netFile            network.xml
+netFile            network_grid.xml
 
 #population
 plansFile          plans.100.xml
