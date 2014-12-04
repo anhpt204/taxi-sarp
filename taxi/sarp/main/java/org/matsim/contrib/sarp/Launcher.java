@@ -250,7 +250,7 @@ public class Launcher
 	 */
 	public static void main(String[] args) throws FileNotFoundException, IOException
 	{
-		String paramsFile = "./input/test/params.in";
+		String paramsFile = "./input/grid/params.in";
 		
 //		String paramsFile = "./input/mielec/params.in";
     	//String paramsFile = "./input/params.in";

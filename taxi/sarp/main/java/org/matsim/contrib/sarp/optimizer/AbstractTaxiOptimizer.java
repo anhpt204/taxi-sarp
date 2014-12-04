@@ -63,7 +63,7 @@ public abstract class AbstractTaxiOptimizer
 		
 		AbstractRequest absRequest = (AbstractRequest)request;
 		
-		if(((AbstractRequest)request).getType() == RequestType.PEOPLE_REQUEST)
+		if(((AbstractRequest)request).getType() == RequestType.PEOPLE)
 		{
 			unplannedPeopleRequests.add(absRequest);
 			requiresReoptimization = true;

@@ -15,14 +15,14 @@ public class PeopleRequest extends AbstractRequest
 			double t0, double t1, double l0, double l1, Link fromLink,
 			Link toLink, double submissionTime) 
 	{
-		super(id, passenger, t0, t1, l0, l1, fromLink, toLink, submissionTime, RequestType.PEOPLE_REQUEST);
+		super(id, passenger, t0, t1, l0, l1, fromLink, toLink, submissionTime, RequestType.PEOPLE);
 	}
 
 	public PeopleRequest(Id<Request> id, MobsimPassengerAgent passenger,
 			double t0, double t1, double l0, double l1, Link fromLink,
 			Link toLink, int maxNbStops, double maxTravelDistance, double submissionTime) 
 	{
-		super(id, passenger, t0, t1, l0, l1, fromLink, toLink, submissionTime, RequestType.PEOPLE_REQUEST);
+		super(id, passenger, t0, t1, l0, l1, fromLink, toLink, submissionTime, RequestType.PEOPLE);
 
 		this.maxNbStops = maxNbStops;
 		this.maxTravelDistance = maxTravelDistance;

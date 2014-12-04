@@ -108,10 +108,10 @@ public class RequestCreator implements SSARPassengerRequestCreator
 		
 		String name = passenger.getId().toString();
 
-		RequestType type = RequestType.PEOPLE_REQUEST;
+		RequestType type = RequestType.PEOPLE;
 
 		if(name.contains("Parcel"))
-			type = RequestType.PARCEL_REQUEST;
+			type = RequestType.PARCEL;
 		
 		
 		return new AbstractRequest(id, passenger, t0, t1, l0, l1, fromLink, toLink, submissionTime, type);
