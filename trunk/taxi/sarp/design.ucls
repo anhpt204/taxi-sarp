@@ -1,8 +1,8 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <class-diagram version="1.1.7" icons="true" always-add-relationships="false" generalizations="true" realizations="true" 
   associations="true" dependencies="false" nesting-relationships="true">  
-  <class id="1" language="java" name="org.matsim.contrib.sarp.data.AbstractRequest" project="taxi" 
-    file="/taxi/sarp/main/java/org/matsim/contrib/sarp/data/AbstractRequest.java" binary="false" corner="BOTTOM_RIGHT">    
+  <class id="1" language="java" name="org.matsim.contrib.ssarp.data.AbstractRequest" project="taxi" 
+    file="/taxi/ssarp/main/java/org/matsim/contrib/ssarp/data/AbstractRequest.java" binary="false" corner="BOTTOM_RIGHT">    
     <position height="-1" width="-1" x="-45" y="469"/>    
     <display autosize="true" stereotype="true" package="true" initial-value="false" signature="true" 
       sort-features="false" accessors="true" visibility="true">      
@@ -10,8 +10,8 @@
       <operations public="false" package="false" protected="false" private="false" static="true"/>    
     </display>  
   </class>  
-  <enumeration id="2" language="java" name="org.matsim.contrib.sarp.data.AbstractRequest.TaxiRequestStatus" 
-    project="taxi" file="/taxi/sarp/main/java/org/matsim/contrib/sarp/data/AbstractRequest.java" binary="false" 
+  <enumeration id="2" language="java" name="org.matsim.contrib.ssarp.data.AbstractRequest.TaxiRequestStatus" 
+    project="taxi" file="/taxi/ssarp/main/java/org/matsim/contrib/ssarp/data/AbstractRequest.java" binary="false" 
     corner="BOTTOM_RIGHT">    
     <position height="205" width="133" x="-160" y="726"/>    
     <display autosize="false" stereotype="true" package="true" initial-value="false" signature="true" 
@@ -20,8 +20,8 @@
       <operations public="true" package="true" protected="true" private="true" static="true"/>    
     </display>  
   </enumeration>  
-  <class id="3" language="java" name="org.matsim.contrib.sarp.data.ParcelRequest" project="taxi" 
-    file="/taxi/sarp/main/java/org/matsim/contrib/sarp/data/ParcelRequest.java" binary="false" corner="BOTTOM_RIGHT">    
+  <class id="3" language="java" name="org.matsim.contrib.ssarp.data.ParcelRequest" project="taxi" 
+    file="/taxi/ssarp/main/java/org/matsim/contrib/ssarp/data/ParcelRequest.java" binary="false" corner="BOTTOM_RIGHT">    
     <position height="-1" width="-1" x="-117" y="340"/>    
     <display autosize="true" stereotype="true" package="true" initial-value="false" signature="true" 
       sort-features="false" accessors="true" visibility="true">      
@@ -29,8 +29,8 @@
       <operations public="false" package="false" protected="false" private="false" static="true"/>    
     </display>  
   </class>  
-  <class id="4" language="java" name="org.matsim.contrib.sarp.data.PeopleRequest" project="taxi" 
-    file="/taxi/sarp/main/java/org/matsim/contrib/sarp/data/PeopleRequest.java" binary="false" corner="BOTTOM_RIGHT">    
+  <class id="4" language="java" name="org.matsim.contrib.ssarp.data.PeopleRequest" project="taxi" 
+    file="/taxi/ssarp/main/java/org/matsim/contrib/ssarp/data/PeopleRequest.java" binary="false" corner="BOTTOM_RIGHT">    
     <position height="-1" width="-1" x="21" y="252"/>    
     <display autosize="true" stereotype="true" package="true" initial-value="false" signature="true" 
       sort-features="false" accessors="true" visibility="true">      
@@ -92,8 +92,8 @@
       <operations public="false" package="false" protected="false" private="false" static="true"/>    
     </display>  
   </interface>  
-  <class id="11" language="java" name="org.matsim.contrib.sarp.optimizer.TaxiOptimizerConfiguration" project="taxi" 
-    file="/taxi/sarp/main/java/org/matsim/contrib/sarp/optimizer/TaxiOptimizerConfiguration.java" binary="false" 
+  <class id="11" language="java" name="org.matsim.contrib.ssarp.optimizer.TaxiOptimizerConfiguration" project="taxi" 
+    file="/taxi/ssarp/main/java/org/matsim/contrib/ssarp/optimizer/TaxiOptimizerConfiguration.java" binary="false" 
     corner="BOTTOM_RIGHT">    
     <position height="115" width="345" x="286" y="298"/>    
     <display autosize="true" stereotype="true" package="true" initial-value="false" signature="true" 
@@ -102,8 +102,8 @@
       <operations public="false" package="false" protected="false" private="false" static="true"/>    
     </display>  
   </class>  
-  <enumeration id="12" language="java" name="org.matsim.contrib.sarp.optimizer.TaxiOptimizerConfiguration.Goal" 
-    project="taxi" file="/taxi/sarp/main/java/org/matsim/contrib/sarp/optimizer/TaxiOptimizerConfiguration.java" 
+  <enumeration id="12" language="java" name="org.matsim.contrib.ssarp.optimizer.TaxiOptimizerConfiguration.Goal" 
+    project="taxi" file="/taxi/ssarp/main/java/org/matsim/contrib/ssarp/optimizer/TaxiOptimizerConfiguration.java" 
     binary="false" corner="BOTTOM_RIGHT">    
     <position height="-1" width="-1" x="496" y="537"/>    
     <display autosize="true" stereotype="true" package="true" initial-value="false" signature="true" 
@@ -112,8 +112,8 @@
       <operations public="false" package="false" protected="false" private="false" static="true"/>    
     </display>  
   </enumeration>  
-  <class id="13" language="java" name="org.matsim.contrib.sarp.optimizer.AbstractTaxiOptimizer" project="taxi" 
-    file="/taxi/sarp/main/java/org/matsim/contrib/sarp/optimizer/AbstractTaxiOptimizer.java" binary="false" 
+  <class id="13" language="java" name="org.matsim.contrib.ssarp.optimizer.AbstractTaxiOptimizer" project="taxi" 
+    file="/taxi/ssarp/main/java/org/matsim/contrib/ssarp/optimizer/AbstractTaxiOptimizer.java" binary="false" 
     corner="BOTTOM_RIGHT">    
     <position height="-1" width="-1" x="390" y="149"/>    
     <display autosize="true" stereotype="true" package="true" initial-value="false" signature="true" 
@@ -122,98 +122,106 @@
       <operations public="true" package="true" protected="true" private="true" static="true"/>    
     </display>  
   </class>  
-  <association id="14">    
-    <end type="SOURCE" refId="8" navigable="false">      
-      <attribute id="15" name="vehicles"/>      
-      <multiplicity id="16" minimum="0" maximum="2147483647"/>    
-    </end>    
-    <end type="TARGET" refId="10" navigable="true"/>    
-    <display labels="true" multiplicity="true"/>  
-  </association>  
-  <association id="17">    
-    <end type="SOURCE" refId="11" navigable="false">      
-      <attribute id="18" name="goal"/>      
-      <multiplicity id="19" minimum="0" maximum="1"/>    
-    </end>    
-    <end type="TARGET" refId="12" navigable="true"/>    
-    <display labels="true" multiplicity="true"/>  
-  </association>  
-  <realization id="20">    
-    <end type="SOURCE" refId="1"/>    
-    <end type="TARGET" refId="5"/>  
-  </realization>  
-  <association id="21">    
-    <end type="SOURCE" refId="8" navigable="false">      
-      <attribute id="22" name="unmodifiableVehicles"/>      
-      <multiplicity id="23" minimum="0" maximum="2147483647"/>    
-    </end>    
-    <end type="TARGET" refId="10" navigable="true"/>    
-    <display labels="true" multiplicity="true"/>  
-  </association>  
-  <generalization id="24">    
-    <end type="SOURCE" refId="5"/>    
-    <end type="TARGET" refId="9"/>  
-  </generalization>  
-  <nesting id="25">    
+  <nesting id="14">    
     <end type="SOURCE" refId="1"/>    
     <end type="TARGET" refId="2"/>  
   </nesting>  
-  <realization id="26">    
-    <end type="SOURCE" refId="6"/>    
-    <end type="TARGET" refId="9"/>  
+  <realization id="15">    
+    <end type="SOURCE" refId="8"/>    
+    <end type="TARGET" refId="7"/>  
   </realization>  
-  <generalization id="27">    
-    <end type="SOURCE" refId="3"/>    
-    <end type="TARGET" refId="1"/>  
-  </generalization>  
-  <generalization id="28">    
-    <end type="SOURCE" refId="1"/>    
-    <end type="TARGET" refId="6"/>  
-  </generalization>  
-  <association id="29">    
+  <association id="16">    
     <end type="SOURCE" refId="8" navigable="false">      
-      <attribute id="30" name="requests"/>      
-      <multiplicity id="31" minimum="0" maximum="2147483647"/>    
+      <attribute id="17" name="unmodifiableRequests">        
+        <position height="0" width="0" x="0" y="0"/>      
+      </attribute>      
+      <multiplicity id="18" minimum="0" maximum="2147483647">        
+        <position height="0" width="0" x="0" y="0"/>      
+      </multiplicity>    
     </end>    
     <end type="TARGET" refId="9" navigable="true"/>    
     <display labels="true" multiplicity="true"/>  
   </association>  
-  <nesting id="32">    
-    <end type="SOURCE" refId="11"/>    
-    <end type="TARGET" refId="12"/>  
-  </nesting>  
-  <generalization id="33">    
-    <end type="SOURCE" refId="4"/>    
-    <end type="TARGET" refId="1"/>  
-  </generalization>  
-  <association id="34">    
-    <end type="SOURCE" refId="13" navigable="false">      
-      <attribute id="35" name="unplannedRequests"/>      
-      <multiplicity id="36" minimum="0" maximum="2147483647"/>    
+  <association id="19">    
+    <end type="SOURCE" refId="8" navigable="false">      
+      <attribute id="20" name="unmodifiableVehicles">        
+        <position height="0" width="0" x="0" y="0"/>      
+      </attribute>      
+      <multiplicity id="21" minimum="0" maximum="2147483647">        
+        <position height="0" width="0" x="0" y="0"/>      
+      </multiplicity>    
     </end>    
-    <end type="TARGET" refId="1" navigable="true"/>    
+    <end type="TARGET" refId="10" navigable="true"/>    
     <display labels="true" multiplicity="true"/>  
   </association>  
-  <realization id="37">    
-    <end type="SOURCE" refId="8"/>    
-    <end type="TARGET" refId="7"/>  
-  </realization>  
-  <association id="38">    
+  <generalization id="22">    
+    <end type="SOURCE" refId="1"/>    
+    <end type="TARGET" refId="6"/>  
+  </generalization>  
+  <generalization id="23">    
+    <end type="SOURCE" refId="5"/>    
+    <end type="TARGET" refId="9"/>  
+  </generalization>  
+  <association id="24">    
     <end type="SOURCE" refId="13" navigable="false">      
-      <attribute id="39" name="optimConfig"/>      
-      <multiplicity id="40" minimum="0" maximum="1"/>    
+      <attribute id="25" name="optimConfig">        
+        <position height="0" width="0" x="0" y="0"/>      
+      </attribute>      
+      <multiplicity id="26" minimum="0" maximum="1">        
+        <position height="0" width="0" x="0" y="0"/>      
+      </multiplicity>    
     </end>    
     <end type="TARGET" refId="11" navigable="true"/>    
     <display labels="true" multiplicity="true"/>  
   </association>  
-  <association id="41">    
+  <association id="27">    
     <end type="SOURCE" refId="8" navigable="false">      
-      <attribute id="42" name="unmodifiableRequests"/>      
-      <multiplicity id="43" minimum="0" maximum="2147483647"/>    
+      <attribute id="28" name="requests">        
+        <position height="0" width="0" x="0" y="0"/>      
+      </attribute>      
+      <multiplicity id="29" minimum="0" maximum="2147483647">        
+        <position height="0" width="0" x="0" y="0"/>      
+      </multiplicity>    
     </end>    
     <end type="TARGET" refId="9" navigable="true"/>    
     <display labels="true" multiplicity="true"/>  
   </association>  
+  <association id="30">    
+    <end type="SOURCE" refId="11" navigable="false">      
+      <attribute id="31" name="goal">        
+        <position height="0" width="0" x="0" y="0"/>      
+      </attribute>      
+      <multiplicity id="32" minimum="0" maximum="1">        
+        <position height="0" width="0" x="0" y="0"/>      
+      </multiplicity>    
+    </end>    
+    <end type="TARGET" refId="12" navigable="true"/>    
+    <display labels="true" multiplicity="true"/>  
+  </association>  
+  <realization id="33">    
+    <end type="SOURCE" refId="6"/>    
+    <end type="TARGET" refId="9"/>  
+  </realization>  
+  <association id="34">    
+    <end type="SOURCE" refId="8" navigable="false">      
+      <attribute id="35" name="vehicles">        
+        <position height="0" width="0" x="0" y="0"/>      
+      </attribute>      
+      <multiplicity id="36" minimum="0" maximum="2147483647">        
+        <position height="0" width="0" x="0" y="0"/>      
+      </multiplicity>    
+    </end>    
+    <end type="TARGET" refId="10" navigable="true"/>    
+    <display labels="true" multiplicity="true"/>  
+  </association>  
+  <realization id="37">    
+    <end type="SOURCE" refId="1"/>    
+    <end type="TARGET" refId="5"/>  
+  </realization>  
+  <nesting id="38">    
+    <end type="SOURCE" refId="11"/>    
+    <end type="TARGET" refId="12"/>  
+  </nesting>  
   <classifier-display autosize="true" stereotype="true" package="true" initial-value="false" signature="true" 
     sort-features="false" accessors="true" visibility="true">    
     <attributes public="true" package="true" protected="true" private="true" static="true"/>    
