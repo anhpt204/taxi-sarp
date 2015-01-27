@@ -14,21 +14,4 @@
 	<natures>
 		<nature>org.eclipse.jdt.core.javanature</nature>
 	</natures>
-	<linkedResources>
-		<link>
-			<name>dvrp</name>
-			<type>2</type>
-			<location>/home/tuananh/Documents/projects/contrib/dvrp/src/main/java</location>
-		</link>
-		<link>
-			<name>matsim</name>
-			<type>2</type>
-			<location>/home/tuananh/Documents/projects/matsim/src/main/java</location>
-		</link>
-		<link>
-			<name>michalm</name>
-			<type>2</type>
-			<location>/home/tuananh/Documents/projects/michalm/src/main/java</location>
-		</link>
-	</linkedResources>
 </projectDescription>
