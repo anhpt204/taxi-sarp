@@ -43,19 +43,23 @@ public class AbstractRequest extends RequestImpl
 	private final MobsimPassengerAgent passenger;
     private final Link fromLink;
     private final Link toLink;
-    private final double l0;// earliest end time
-    private final double l1;// latest end time
+    private final double earlyDeliveryTime;// earliest end time
+    private final double lateDeliveryTime;// latest end time
+    private final double maxTravelTime;
+    private final int maxNbStops;
     
-	public AbstractRequest(Id<Request> id, MobsimPassengerAgent passenger, double t0,
-			double t1, double l0, double l1, Link fromLink, Link toLink, 
-			double submissionTime, RequestType type) 
+	public AbstractRequest(Id<Request> id, MobsimPassengerAgent passenger, double earlyPickupTime,
+			double latePickupTime, double earlyDeliveryTime, double lateDeliveryTime, Link fromLink, Link toLink, 
+			double submissionTime, double maxTravelTime, int maxNbStops, RequestType type) 
 	{
-		super(id, 1, t0, t1, submissionTime);
+		super(id, 1, earlyPickupTime, latePickupTime, submissionTime);
 		this.passenger = passenger;
 		this.fromLink = fromLink;
 		this.toLink = toLink;
-		this.l0 = l0;
-		this.l1 = l1;
+		this.earlyDeliveryTime = earlyDeliveryTime;
+		this.lateDeliveryTime = lateDeliveryTime;
+		this.maxTravelTime = maxTravelTime;
+		this.maxNbStops = maxNbStops;
 		this.type = type;
 		// TODO Auto-generated constructor stub
 	}
@@ -77,15 +81,7 @@ public class AbstractRequest extends RequestImpl
 		// TODO Auto-generated method stub
 		return this.passenger;
 	}
-	
-	public double getL0()
-	{
-		return this.l0;
-	}
-	public double getL1()
-	{
-		return this.l1;
-	}
+		
 	
 	public TaxiPickupDriveTask getPickupDriveTask() {
 		return pickupDriveTask;
@@ -196,6 +192,26 @@ public class AbstractRequest extends RequestImpl
 	public void setType(RequestType type)
 	{
 		this.type = type;
+	}
+
+	public double getMaxTravelTime()
+	{
+		return maxTravelTime;
+	}
+
+	public int getMaxNbStops()
+	{
+		return maxNbStops;
+	}
+
+	public double getLateDeliveryTime()
+	{
+		return lateDeliveryTime;
+	}
+
+	public double getEarlyDeliveryTime()
+	{
+		return earlyDeliveryTime;
 	}
 
 }

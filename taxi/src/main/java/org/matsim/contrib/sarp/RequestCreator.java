@@ -101,7 +101,6 @@ public class RequestCreator implements PassengerRequestCreator
 		double l1 = l0 + 10*60;
 		
 		String name = passenger.getId().toString();
-
 		RequestType type = RequestType.PEOPLE;
 
 		if(name.contains("Parcel"))

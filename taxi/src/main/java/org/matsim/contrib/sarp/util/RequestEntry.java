@@ -6,8 +6,10 @@
  */
 package org.matsim.contrib.sarp.util;
 
+import org.matsim.api.core.v01.Id;
 import org.matsim.api.core.v01.population.Person;
 import org.matsim.contrib.dvrp.data.Request;
+import org.matsim.contrib.sarp.data.AbstractRequest;
 
 /**
  * @author tuananh
@@ -15,14 +17,39 @@ import org.matsim.contrib.dvrp.data.Request;
  */
 public  class RequestEntry
 {
-	public final Person person;
-	public final double submissionTime;
+	private Id<Person> personId;
+	private AbstractRequest request;
 	
-	public RequestEntry(Person person, double submissionTime)
+	public RequestEntry(Id<Person> id, AbstractRequest request)
 	{
-		this.person = person;
-		this.submissionTime = submissionTime;
+		super();
+		this.personId = id;
+		this.request = request;
+	}
+
+	public void setPersonId(Id<Person> personId)
+	{
+		this.personId = personId;
+	}
+
+	public void setRequest(AbstractRequest request)
+	{
+		this.request = request;
+	}
+
+	public Id<Person> getPersonId()
+	{
+		return personId;
+	}
+
+	public AbstractRequest getRequest()
+	{
+		return request;
 	}
 	
+	public double getSubmissionTime()
+	{
+		return request.getSubmissionTime();
+	}
 	
 }
