@@ -46,63 +46,69 @@ public class VrpUtilities
 	
 	public static Queue<RequestEntry> getRequestEntry(String taxiCustomersFile, MatsimVrpContext context) throws FileNotFoundException, IOException
 	{
-		if(taxiCustomersFile != null)
+		
+		try (BufferedReader br = new BufferedReader(new FileReader(new File(taxiCustomersFile)))) 
 		{
-			try (BufferedReader br = new BufferedReader(new FileReader(new File(taxiCustomersFile)))) 
-			{
-	            HashMap<String, String> taxiCustomerIds = new HashMap<>();
-	
-	            String line;
-	            while ( (line = br.readLine()) != null) 
-	            {
-	            	String id = line.split("")[0];
-	                taxiCustomerIds.put(id, line);
-	            }
-	            
-	    		Queue<RequestEntry> sortedSubmissionTimeQueue 
-	    		= new PriorityBlockingQueue<>(taxiCustomerIds.size(), new Comparator<RequestEntry>()
-	    		{
-	
-	    			@Override
-	    			public int compare(RequestEntry o1, RequestEntry o2)
-	    			{
-	    				int cmp = Double.compare(o1.getSubmissionTime(), o2.getSubmissionTime());
-	    				if(cmp == 0)
-	    				{
-	    					return o1.getPersonId().compareTo(o2.getPersonId());
-	    				}
-	    				return cmp;
-	    			}
-	    		});
-	            
-	    		
-	    		Map<Id<Person>, ? extends Person> persons = context.getScenario().getPopulation().getPersons();
-	    		
-	    		Iterator<Id<Person>> iter = persons.keySet().iterator();
-	    		while (iter.hasNext())
-	    		{
-	    			Id<Person> id = iter.next();
-	    			String[] vs = id.toString().split("");
+            HashMap<String, String> taxiCustomerIds = new HashMap<>();
+            // read the first line
+            br.readLine();
+            
+            String line;
+            while ( (line = br.readLine()) != null) 
+            {
+            	if (line == "-1")
+            		continue;
+            	
+            	String id = line.split(" ")[0];
+                taxiCustomerIds.put(id, line);
+            }
+            
+    		Queue<RequestEntry> sortedSubmissionTimeQueue 
+    		= new PriorityBlockingQueue<>(taxiCustomerIds.size(), new Comparator<RequestEntry>()
+    		{
 
-	    			RequestType requestType = RequestType.PEOPLE;
-	    			if(vs[0] == "Parcel")
-	    				requestType = RequestType.PARCEL;
+    			@Override
+    			public int compare(RequestEntry o1, RequestEntry o2)
+    			{
+    				int cmp = Double.compare(o1.getSubmissionTime(), o2.getSubmissionTime());
+    				if(cmp == 0)
+    				{
+    					return o1.getPersonId().compareTo(o2.getPersonId());
+    				}
+    				return cmp;
+    			}
+    		});
+            
+    		
+    		Map<Id<Person>, ? extends Person> persons = context.getScenario().getPopulation().getPersons();
+    		
+    		Iterator<Id<Person>> iter = persons.keySet().iterator();
+    		while (iter.hasNext())
+    		{
+    			Id<Person> id = iter.next();
+    			String[] vs = id.toString().split("-");
 
-	    			String request = taxiCustomerIds.get(vs[1]);
+//	    			RequestType requestType = RequestType.PEOPLE;
+//	    			if(vs[0] == "Parcel")
+//	    				requestType = RequestType.PARCEL;
 
-	    			String[] xs = request.split("");
-	    			double submissionTime = Double.parseDouble(xs[1]);
-	    			int pickupLinkId = Integer.parseInt(xs[2]);
-	    			int deliveryLinkId = Integer.parseInt(xs[3]);
-	    			double earlyPickupTime = Double.parseDouble(xs[4]);
-	    			double latePickupTime = Double.parseDouble(xs[5]);
-	    			double earlyDeliveryTime = Double.parseDouble(xs[6]);
-	    			double lateDeliveryTime = Double.parseDouble(xs[7]);
-	    			double maxTravelDistance = Double.parseDouble(xs[8]);
-	    			int maxNbStops = Integer.parseInt(xs[9]);
+    			String request = taxiCustomerIds.get(vs[1]);
 
-	    			AbstractRequest request = new AbstractRequest(id, passenger, earlyPickupTime, latePickupTime, earlyDeliveryTime, lateDeliveryTime, fromLink, toLink, submissionTime, maxTravelTime, maxNbStops, type)
-	    			
+    			String[] xs = request.split(" ");
+    			double submissionTime = Double.parseDouble(xs[1]);
+    			int fromLinkId = Integer.parseInt(xs[2]);
+    			int toLinkId = Integer.parseInt(xs[3]);
+    			double earlyPickupTime = Double.parseDouble(xs[4]);
+    			double latePickupTime = Double.parseDouble(xs[5]);
+    			double earlyDeliveryTime = Double.parseDouble(xs[6]);
+    			double lateDeliveryTime = Double.parseDouble(xs[7]);
+    			double maxTravelDistance = Double.parseDouble(xs[8]);
+    			int maxNbStops = Integer.parseInt(xs[9]);
+
+    			sortedSubmissionTimeQueue.add(new RequestEntry(id, submissionTime, 
+    					fromLinkId, toLinkId, earlyPickupTime, latePickupTime, 
+    					earlyDeliveryTime, lateDeliveryTime, maxTravelDistance, maxNbStops));
+//	    			
 //	    			for (PlanElement pe : person.getSelectedPlan().getPlanElements()) {
 //	                    if (pe instanceof Activity) 
 //	                    {
@@ -122,64 +128,10 @@ public class VrpUtilities
 //	                        }
 //	                    }
 //	                }
-	    		}
-	    		
-	    		return sortedSubmissionTimeQueue;
-	        }
-
-        }
-		else
-		{
-			
-			//set all person to be taxi mode
-			Map<Id<Person>, ? extends Person> persons = context.getScenario().getPopulation().getPersons();
-			
-			Queue<RequestEntry> sortedSubmissionTimeQueue 
-    		= new PriorityBlockingQueue<>(persons.size(), new Comparator<RequestEntry>()
-    		{
-
-    			@Override
-    			public int compare(RequestEntry o1, RequestEntry o2)
-    			{
-    				int cmp = Double.compare(o1.submissionTime, o2.submissionTime);
-    				if(cmp == 0)
-    				{
-    					return o1.person.getId().compareTo(o2.person.getId());
-    				}
-    				return cmp;
-    			}
-    		});
-            
-			
-			for(Person p : persons.values())
-			{
-				for(PlanElement pe : p.getSelectedPlan().getPlanElements())
-				{
-					if (pe instanceof Leg)
-					{
-						((Leg)pe).setMode(RequestCreator.MODE);
-						
-						double departimeTime = ((Leg)pe).getDepartureTime();
-                        if(departimeTime != Time.UNDEFINED_TIME)
-                        {
-                        	
-                        	//create randomly submission time
-                        	double start = departimeTime - 15 * 60;
-                        	double t = (new Random()).nextInt(10*60);
-                        	
-                        	double submissionTime = start + t;
-                        	
-                        	sortedSubmissionTimeQueue.add(new RequestEntry(p, submissionTime));
-                        	
-                        	
-                        }
-						
-						break;
-					}
-				}
-			}
-			
-			return sortedSubmissionTimeQueue;
+    		}
+    		
+    		return sortedSubmissionTimeQueue;
+	               
 		}
         
 		

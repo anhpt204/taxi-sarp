@@ -61,7 +61,7 @@ public class SARPassengerEngine
 	private final String mode;
 	
 	private final MatsimVrpContext context;
-	private final PassengerRequestCreator requestCreator;
+	private final SARRequestCreator requestCreator;
 	private final VrpOptimizer optimizer;
 	
     private final AdvancedRequestStorage advancedRequestStorage;
@@ -84,7 +84,7 @@ public class SARPassengerEngine
 	private Map<Id<Person>, AbstractRequest> scheduledRequests = new HashMap<>();
 	
 	public SARPassengerEngine(String mode,
-			PassengerRequestCreator requestCreator, VrpOptimizer optimizer,
+			SARRequestCreator requestCreator, VrpOptimizer optimizer,
 			MatsimVrpContext context, 
 			Queue<RequestEntry> sortedSubmissionTimeQueue,
 			QSim qsim,
@@ -150,30 +150,21 @@ public class SARPassengerEngine
 //		return !request.isRejected();
 		return true;
 	}
-
-	private int nextId = 0;
 	
 	private AbstractRequest createAbstractRequest(
-			MobsimPassengerAgent passenger, Id<Link> fromLinkId,
-			Id<Link> toLinkId, double departureTime, double submissionTime)
+			MobsimPassengerAgent passenger, RequestEntry entry, double time)
 	{
 		Map<Id<Link>, ? extends Link> links = this.context.getScenario().getNetwork().getLinks();
-		Link fromLink = links.get(fromLinkId);
-		Link toLink = links.get(toLinkId);
-		if(toLink == null)
-		{
-			int id = (new Random()).nextInt(links.size());
-			toLink = links.get(Id.createLinkId(id));
-		}
+		Link fromLink = links.get(Id.create(entry.getFromLinkId(), Link.class));
+		Link toLink = links.get(Id.create(entry.getToLinkId(), Link.class));
+		
 		
 		Id<Request> id = Id.create(passenger.getId().toString(), Request.class);
-		nextId += 1;
+
 		
-		double t0 = passenger.getActivityEndTime();
-		double t1 = t0 + 2*60;
-		
-		AbstractRequest request = (AbstractRequest) requestCreator.createRequest(id, 
-				passenger, fromLink, toLink, t0, t1, submissionTime);
+		AbstractRequest request = (AbstractRequest) requestCreator.createRequest(id, passenger, fromLink, toLink, entry.getSubmissionTime(),
+				entry.getEarlyDeliveryTime(), entry.getLatePickupTime(), entry.getEarlyDeliveryTime(), entry.getLateDeliveryTime(), 
+				entry.getMaxTravelDistance(), entry.getMaxNbStops());
 		
 		this.context.getVrpData().addRequest(request);
 		return request;
@@ -191,14 +182,14 @@ public class SARPassengerEngine
 			{
 				cont = false;
 				
-				if(sortedSubmissionTimeQueue.peek().submissionTime <= time)
+				if(sortedSubmissionTimeQueue.peek().getSubmissionTime() <= time)
 				{
 					cont = true;
 					
 					RequestEntry entry = sortedSubmissionTimeQueue.poll();
 					for(MobsimAgent agent : qsim.getAgents())
 					{
-						if(agent.getId().equals(entry.person.getId()))
+						if(agent.getId().equals(entry.getPersonId()))
 						{
 							//if(submittedPeople.contains(agent.getId()))
 							//	break;
@@ -207,21 +198,11 @@ public class SARPassengerEngine
 							//create new request
 							
 							MobsimPassengerAgent passenger = (MobsimPassengerAgent)agent;
-							Id<Link> destinationLinkId = null;//passenger.getDestinationLinkId();
-
-							if(destinationLinkId == null)
-							{
-								List<PlanElement> pes = entry.person.getSelectedPlan().getPlanElements();
-								PlanElement lastPE = pes.get(pes.size() - 1);
-								if(lastPE instanceof Activity)
-								{
-									destinationLinkId = ((Activity) lastPE).getLinkId();
-									
-								}
-							}
+//							Id<Link> destinationLinkId = passenger.getDestinationLinkId();
 							
-							AbstractRequest request = createAbstractRequest(passenger, passenger.getCurrentLinkId(), 
-									destinationLinkId, agent.getActivityEndTime(), time);
+							
+							
+							AbstractRequest request = createAbstractRequest(passenger, entry, time);
 							
 							//add this request into unplannedRequest
 							unplannedRequests.add(request);
@@ -258,6 +239,8 @@ public class SARPassengerEngine
 		}
 		
 	}
+
+	
 
 	@Override
 	public void onPrepareSim()

@@ -45,12 +45,12 @@ public class AbstractRequest extends RequestImpl
     private final Link toLink;
     private final double earlyDeliveryTime;// earliest end time
     private final double lateDeliveryTime;// latest end time
-    private final double maxTravelTime;
+    private final double maxTravelDistance;
     private final int maxNbStops;
     
 	public AbstractRequest(Id<Request> id, MobsimPassengerAgent passenger, double earlyPickupTime,
 			double latePickupTime, double earlyDeliveryTime, double lateDeliveryTime, Link fromLink, Link toLink, 
-			double submissionTime, double maxTravelTime, int maxNbStops, RequestType type) 
+			double submissionTime, double maxTravelDistance, int maxNbStops, RequestType type) 
 	{
 		super(id, 1, earlyPickupTime, latePickupTime, submissionTime);
 		this.passenger = passenger;
@@ -58,7 +58,7 @@ public class AbstractRequest extends RequestImpl
 		this.toLink = toLink;
 		this.earlyDeliveryTime = earlyDeliveryTime;
 		this.lateDeliveryTime = lateDeliveryTime;
-		this.maxTravelTime = maxTravelTime;
+		this.maxTravelDistance = maxTravelDistance;
 		this.maxNbStops = maxNbStops;
 		this.type = type;
 		// TODO Auto-generated constructor stub
@@ -196,7 +196,7 @@ public class AbstractRequest extends RequestImpl
 
 	public double getMaxTravelTime()
 	{
-		return maxTravelTime;
+		return maxTravelDistance;
 	}
 
 	public int getMaxNbStops()
