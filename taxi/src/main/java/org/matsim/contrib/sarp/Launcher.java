@@ -76,11 +76,11 @@ public class Launcher
 		
 		//load requests
 		
-		if(params.taxiCustomersFile != null)
-		{
-			List<String> passangerIds = VrpUtilities.readTaxiCustomerIds(params.taxiCustomersFile);
-			VrpPopulationUtils.convertLegModes(passangerIds, RequestCreator.MODE, scenario);
-		}
+//		if(params.taxiCustomersFile != null)
+//		{
+//			List<String> passangerIds = VrpUtilities.readTaxiCustomerIds(params.taxiCustomersFile);
+//			VrpPopulationUtils.convertLegModes(passangerIds, RequestCreator.MODE, scenario);
+//		}
 		
 	}
 	
@@ -149,7 +149,7 @@ public class Launcher
 		//PassengerEngine passengerEngine = VrpLauncherUtils.initPassengerEngine(RequestCreator.MODE, new RequestCreator(), 
 		//		optimizer, contextImpl, qsim);
 		//init SSARPassengerEnggine
-		int timeStep = 5 * 60; //each 15 minutes
+		int timeStep = 10; //seconds
 		SARPassengerEngine passengerEngine = new SARPassengerEngine(RequestCreator.MODE,
 				new RequestCreator(), optimizer, contextImpl, 
 				VrpUtilities.getRequestEntry(params.taxiCustomersFile, contextImpl), 
@@ -262,9 +262,9 @@ public class Launcher
 	 */
 	public static void main(String[] args) throws FileNotFoundException, IOException
 	{
-		String paramsFile = "./input/grid/params.in";
+//		String paramsFile = "./input/grid/params.in";
 		
-//		String paramsFile = "./input/mielec/params.in";
+		String paramsFile = "./input/sanfrancisco/params.in";
     	//String paramsFile = "./input/params.in";
         LauncherParams params = LauncherParams.readParams(paramsFile);
         Launcher launcher = new Launcher(params);

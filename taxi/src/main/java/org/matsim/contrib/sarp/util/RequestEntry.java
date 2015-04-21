@@ -18,13 +18,99 @@ import org.matsim.contrib.sarp.data.AbstractRequest;
 public  class RequestEntry
 {
 	private Id<Person> personId;
-	private AbstractRequest request;
+	private double submissionTime;
+	private int fromLinkId;
+	private int toLinkId;
+	private double earlyPickupTime;
+	private double latePickupTime;
+	private double earlyDeliveryTime;
+	private double lateDeliveryTime;
 	
-	public RequestEntry(Id<Person> id, AbstractRequest request)
+	public RequestEntry(Id<Person> personId, double submissionTime,
+			int fromLinkId, int toLinkId, double earlyPickupTime,
+			double latePickupTime, double earlyDeliveryTime,
+			double lateDeliveryTime, double maxTravelDistance, int maxNbStops)
 	{
 		super();
-		this.personId = id;
-		this.request = request;
+		this.personId = personId;
+		this.submissionTime = submissionTime;
+		this.fromLinkId = fromLinkId;
+		this.toLinkId = toLinkId;
+		this.earlyPickupTime = earlyPickupTime;
+		this.latePickupTime = latePickupTime;
+		this.earlyDeliveryTime = earlyDeliveryTime;
+		this.lateDeliveryTime = lateDeliveryTime;
+		this.maxTravelDistance = maxTravelDistance;
+		this.maxNbStops = maxNbStops;
+	}
+
+	public int getFromLinkId()
+	{
+		return fromLinkId;
+	}
+
+	public void setFromLinkId(int fromLinkId)
+	{
+		this.fromLinkId = fromLinkId;
+	}
+
+	public int getToLinkId()
+	{
+		return toLinkId;
+	}
+
+	public void setToLinkId(int toLinkId)
+	{
+		this.toLinkId = toLinkId;
+	}
+
+	public double getEarlyPickupTime()
+	{
+		return earlyPickupTime;
+	}
+
+	public void setEarlyPickupTime(double earlyPickupTime)
+	{
+		this.earlyPickupTime = earlyPickupTime;
+	}
+
+	public double getLatePickupTime()
+	{
+		return latePickupTime;
+	}
+
+	public void setLatePickupTime(double latePickupTime)
+	{
+		this.latePickupTime = latePickupTime;
+	}
+
+	public double getEarlyDeliveryTime()
+	{
+		return earlyDeliveryTime;
+	}
+
+	public void setEarlyDeliveryTime(double earlyDeliveryTime)
+	{
+		this.earlyDeliveryTime = earlyDeliveryTime;
+	}
+
+	public double getLateDeliveryTime()
+	{
+		return lateDeliveryTime;
+	}
+
+	public void setLateDeliveryTime(double lateDeliveryTime)
+	{
+		this.lateDeliveryTime = lateDeliveryTime;
+	}
+
+	private double maxTravelDistance;
+	private int maxNbStops;
+	
+
+	public Id<Person> getPersonId()
+	{
+		return personId;
 	}
 
 	public void setPersonId(Id<Person> personId)
@@ -32,24 +118,36 @@ public  class RequestEntry
 		this.personId = personId;
 	}
 
-	public void setRequest(AbstractRequest request)
-	{
-		this.request = request;
-	}
-
-	public Id<Person> getPersonId()
-	{
-		return personId;
-	}
-
-	public AbstractRequest getRequest()
-	{
-		return request;
-	}
-	
 	public double getSubmissionTime()
 	{
-		return request.getSubmissionTime();
+		return submissionTime;
 	}
+
+	public void setSubmissionTime(double submissionTime)
+	{
+		this.submissionTime = submissionTime;
+	}
+
+	public double getMaxTravelDistance()
+	{
+		return maxTravelDistance;
+	}
+
+	public void setMaxTravelDistance(double maxTravelDistance)
+	{
+		this.maxTravelDistance = maxTravelDistance;
+	}
+
+	public int getMaxNbStops()
+	{
+		return maxNbStops;
+	}
+
+	public void setMaxNbStops(int maxNbStops)
+	{
+		this.maxNbStops = maxNbStops;
+	}
+	
+	
 	
 }
