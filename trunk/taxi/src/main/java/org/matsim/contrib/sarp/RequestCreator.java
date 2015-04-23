@@ -23,28 +23,7 @@ import org.matsim.core.mobsim.framework.MobsimPassengerAgent;
 public class RequestCreator implements SARRequestCreator
 {
 	public static String MODE = "taxi";
-	
-
-
-	@Override
-	public PassengerRequest createRequest(Id<Request> id,
-		MobsimPassengerAgent passenger, Link fromLink, Link toLink, double t0,
-		double t1, double submissionTime)
-	{
-		//double l0 = t0 + 30*60;
-		//double l0 = t0 + passenger.getExpectedTravelTime();
-		double l0 = t0 + (new Random()).nextInt(60*60);
-		double l1 = l0 + 10*60;
 		
-		String name = passenger.getId().toString();
-		RequestType type = RequestType.PEOPLE;
-
-		if(name.contains("Parcel"))
-			type = RequestType.PARCEL;
-		
-		
-		return new AbstractRequest(id, passenger, t0, t1, l0, l1, fromLink, toLink, submissionTime, type);
-	}
 
 	@Override
 	public AbstractRequest createRequest(Id<Request> id,
@@ -64,6 +43,20 @@ public class RequestCreator implements SARRequestCreator
 				latePickupTime, earlyDeliveryTime, lateDeliveryTime, 
 				fromLink, toLink, submissionTime, maxTravelDistance, 
 				maxNbStops, type);
+	}
+
+
+
+	/* (non-Javadoc)
+	 * @see org.matsim.contrib.dvrp.passenger.PassengerRequestCreator#createRequest(org.matsim.api.core.v01.Id, org.matsim.core.mobsim.framework.MobsimPassengerAgent, org.matsim.api.core.v01.network.Link, org.matsim.api.core.v01.network.Link, double, double, double)
+	 */
+	@Override
+	public PassengerRequest createRequest(Id<Request> id,
+			MobsimPassengerAgent passenger, Link fromLink, Link toLink,
+			double t0, double t1, double now)
+	{
+		// TODO Auto-generated method stub
+		return null;
 	}
 
 }

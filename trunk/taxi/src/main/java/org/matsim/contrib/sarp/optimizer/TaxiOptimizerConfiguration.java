@@ -3,8 +3,8 @@ package org.matsim.contrib.sarp.optimizer;
 import org.matsim.contrib.dvrp.MatsimVrpContext;
 import org.matsim.contrib.sarp.LauncherParams;
 import org.matsim.contrib.sarp.enums.AlgorithmConfig;
+import org.matsim.contrib.sarp.route.VehiclePathFinder;
 import org.matsim.contrib.sarp.scheduler.TaxiScheduler;
-import org.matsim.contrib.sarp.vehreqpath.VehicleRequestPathFinder;
 
 public class TaxiOptimizerConfiguration 
 {
@@ -17,11 +17,11 @@ public class TaxiOptimizerConfiguration
     public final TaxiScheduler scheduler;
     public final Goal goal;
     public final LauncherParams params;
-    public final VehicleRequestPathFinder vrpFinder;
+    public final VehiclePathFinder vrpFinder;
     
     public TaxiOptimizerConfiguration(MatsimVrpContext context, TaxiScheduler scheduler,
     		Goal goal, LauncherParams params,
-    		VehicleRequestPathFinder vrpFinder)
+    		VehiclePathFinder vrpFinder)
     {
     	this.context = context;
     	this.scheduler = scheduler;

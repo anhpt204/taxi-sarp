@@ -38,11 +38,11 @@ import org.matsim.contrib.sarp.optimizer.TaxiOptimizer;
 import org.matsim.contrib.sarp.optimizer.TaxiOptimizerConfiguration;
 import org.matsim.contrib.sarp.optimizer.TaxiOptimizerConfiguration.Goal;
 import org.matsim.contrib.sarp.passenger.SARPassengerEngine;
+import org.matsim.contrib.sarp.route.VehiclePathFinder;
 import org.matsim.contrib.sarp.scheduler.TaxiScheduler;
 import org.matsim.contrib.sarp.scheduler.TaxiSchedulerParams;
 import org.matsim.contrib.sarp.util.*;
 import org.matsim.contrib.sarp.util.TaxiStatisticsCalculator.TaxiStatistics;
-import org.matsim.contrib.sarp.vehreqpath.VehicleRequestPathFinder;
 import org.matsim.core.api.experimental.events.EventsManager;
 import org.matsim.core.events.algorithms.EventWriter;
 import org.matsim.core.events.algorithms.EventWriterXML;
@@ -234,7 +234,7 @@ public class Launcher
 		
 		TaxiScheduler scheduler = new TaxiScheduler(context, pathCalculator, schedulerParams);
 		
-		VehicleRequestPathFinder vrpFinder = new VehicleRequestPathFinder(pathCalculator, scheduler);
+		VehiclePathFinder vrpFinder = new VehiclePathFinder(pathCalculator, scheduler);
 		
 		return new TaxiOptimizerConfiguration(this.context, scheduler, Goal.MIN_PICKUP_TIME, this.params, vrpFinder);
 	}
