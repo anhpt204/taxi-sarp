@@ -14,13 +14,13 @@ import org.matsim.contrib.sarp.data.AbstractRequest;
 import org.matsim.contrib.sarp.data.ParcelRequest;
 import org.matsim.contrib.sarp.data.PeopleRequest;
 import org.matsim.contrib.sarp.filter.*;
+import org.matsim.contrib.sarp.route.PathCostCalculators;
+import org.matsim.contrib.sarp.route.PathNode;
+import org.matsim.contrib.sarp.route.VehiclePath;
+import org.matsim.contrib.sarp.route.VehiclePathCost;
+import org.matsim.contrib.sarp.route.VehicleRoute;
+import org.matsim.contrib.sarp.route.PathNode.PathNodeType;
 import org.matsim.contrib.sarp.schedule.TaxiTask.TaxiTaskType;
-import org.matsim.contrib.sarp.vehreqpath.PathCostCalculators;
-import org.matsim.contrib.sarp.vehreqpath.PathNode;
-import org.matsim.contrib.sarp.vehreqpath.PathNode.PathNodeType;
-import org.matsim.contrib.sarp.vehreqpath.VehicleRequestPath;
-import org.matsim.contrib.sarp.vehreqpath.VehicleRequestPathCost;
-import org.matsim.contrib.sarp.vehreqpath.VehicleRequestsRoute;
 
 public class Optimizer1 extends AbstractTaxiOptimizer
 {
@@ -36,7 +36,7 @@ public class Optimizer1 extends AbstractTaxiOptimizer
 		super(optimConfig, new TreeSet<AbstractRequest>(Requests.ABSOLUTE_COMPARATOR),
 				new TreeSet<AbstractRequest>(Requests.ABSOLUTE_COMPARATOR));
 		
-		this.vehicleFilter = new KStraightLineNearestVehicleFilter(optimConfig.scheduler, optimConfig.params.nearestVehiclesLimit);
+		this.vehicleFilter = new KStraightLineNearestVehicleFilter(optimConfig.scheduler, optimConfig.params.nearestRequestsLimit);
 		
 	}
 	
@@ -76,7 +76,8 @@ public class Optimizer1 extends AbstractTaxiOptimizer
 			else 
 			{
 				//select parcels for planning
-				Collection<AbstractRequest> selectedParcelRequests = new TreeSet<AbstractRequest>(Requests.ABSOLUTE_COMPARATOR);
+//				Collection<AbstractRequest> selectedParcelRequests = new TreeSet<AbstractRequest>(Requests.ABSOLUTE_COMPARATOR);
+				ArrayList<AbstractRequest> selectedParcelRequests = new ArrayList<>();
 				//AbstractRequest[] parcels = (AbstractRequest[])parcelRequests.toArray();
 				if(unplannedParcelRequests.size() < MAXNUMBERPARCELS)
 				{
@@ -96,9 +97,11 @@ public class Optimizer1 extends AbstractTaxiOptimizer
 					}
 				}
 				
+				ArrayList<AbstractRequest> peopleRequests = new ArrayList<>();
+				peopleRequests.add(peopleRequest);
 				//find a route with some parcel requests
-				VehicleRequestsRoute bestRoute = findBestRoute(feasibleVehicle, 
-						peopleRequest, 
+				VehicleRoute bestRoute = findBestRoute(feasibleVehicle, 
+						peopleRequests, 
 						selectedParcelRequests, 
 						PathCostCalculators.BEST_COST);
 				
@@ -108,7 +111,7 @@ public class Optimizer1 extends AbstractTaxiOptimizer
 					//then build schedule for this vehicle
 					optimConfig.scheduler.scheduleRequests(bestRoute);
 					//and then remove all parcel request from unplannedParcelRequests
-					for(AbstractRequest p: bestRoute.parcelRequests)
+					for(AbstractRequest p: bestRoute.getParcelRequests())
 						unplannedParcelRequests.remove(p);
 					// and remove peopleRequest and feasibleVehicle
 					//unplannedPeopleRequests.remove(peopleRequest);
@@ -134,15 +137,15 @@ public class Optimizer1 extends AbstractTaxiOptimizer
 		
 	}
 	
-	private VehicleRequestsRoute findBestRoute(Vehicle vehicle, AbstractRequest peopleRequest,
-			Collection<AbstractRequest> parcelRequests, VehicleRequestPathCost costCalculator)
+	private VehicleRoute findBestRoute(Vehicle vehicle, ArrayList<AbstractRequest> peopleRequests,
+			ArrayList<AbstractRequest> parcelRequests, VehiclePathCost costCalculator)
 	{
 		//2 for a person, 1 for current location
 		PathNode[] nodes = new PathNode[2 + 2 * parcelRequests.size() + 1];
 		//get earlist time, location when vehicle is idle
 		LinkTimePair departure = this.optimConfig.scheduler.getEarliestIdleness(vehicle);
 
-		
+		AbstractRequest peopleRequest = peopleRequests.get(0);
 		//make a simple route
 		nodes[0] = new PathNode(departure.link, null, PathNodeType.START, departure.time);
 		nodes[1] = new PathNode(peopleRequest.getFromLink(), peopleRequest, PathNodeType.PICKUP, 0);
@@ -157,7 +160,7 @@ public class Optimizer1 extends AbstractTaxiOptimizer
 		}
 		
 		//generate route
-		return optimConfig.vrpFinder.getRouteAndCalculateCost(vehicle, nodes, peopleRequest, parcelRequests, costCalculator);
+		return optimConfig.vrpFinder.getRouteAndCalculateCost(vehicle, nodes, peopleRequests, parcelRequests, costCalculator);
 		
 	}
 

@@ -1,7 +1,15 @@
 package org.matsim.contrib.sarp.scheduler;
 
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.Iterator;
+import java.util.List;
+import java.util.ListIterator;
+
 import org.matsim.contrib.dvrp.data.Vehicle;
 import org.matsim.contrib.dvrp.schedule.Schedule;
+import org.matsim.contrib.dvrp.schedule.Schedules;
+import org.matsim.contrib.dvrp.schedule.Task;
 import org.matsim.contrib.sarp.data.AbstractRequest;
 import org.matsim.contrib.sarp.schedule.TaxiTask;
 import org.matsim.contrib.sarp.schedule.TaxiTask.TaxiTaskType;
@@ -20,7 +28,7 @@ public class TaxiSchedules {
             		|| (t.getTaxiTaskType() == TaxiTaskType.PARCEL_PICKUP_STAY);
         };
     };
-
+    
     public static final Function<TaxiTask, AbstractRequest> TAXI_TASK_TO_REQUEST = new Function<TaxiTask, AbstractRequest>() {
         public AbstractRequest apply(TaxiTask t)
         {
@@ -46,4 +54,28 @@ public class TaxiSchedules {
         Iterable<TaxiTask> pickupTasks = Iterables.filter(schedule.getTasks(), IS_PICKUP_STAY);
         return Iterables.transform(pickupTasks, TAXI_TASK_TO_REQUEST);
     }
+    
+    public static List<TaxiTask> getUnservedTasks(Schedule<TaxiTask> schedule)
+	{
+    	List<TaxiTask> unservedTasks = new ArrayList();
+		
+		Task currentTask = schedule.getCurrentTask();
+		int currentTaskIdx = currentTask.getTaskIdx();
+		int scheduleSize = schedule.getTaskCount();
+		List<TaxiTask> tasks = schedule.getTasks();
+		
+		for(int i = currentTaskIdx+1; i < scheduleSize; i++)
+		{
+			unservedTasks.add(tasks.get(i));
+			
+		}
+		return unservedTasks;
+	}
+    
+    public static Iterable<AbstractRequest> getUnservedRequests(Schedule<TaxiTask> schedule)
+	{
+    	
+		Iterable<TaxiTask> pickupTasks = Iterables.filter(getUnservedTasks(schedule), IS_PICKUP_STAY);
+		return Iterables.transform(pickupTasks, TAXI_TASK_TO_REQUEST);
+	}
 }

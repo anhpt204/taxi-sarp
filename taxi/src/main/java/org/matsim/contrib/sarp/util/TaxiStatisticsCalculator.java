@@ -64,7 +64,7 @@ public class TaxiStatisticsCalculator
 
 			case PEOPLE_DROPOFF_DRIVE:
 				TaxiDropoffDriveTask dropoffDriveTask = (TaxiDropoffDriveTask)task;
-				if(task.getEndTime() > dropoffDriveTask.getRequest().getL1())
+				if(task.getEndTime() > dropoffDriveTask.getRequest().getLateDeliveryTime())
 					taxiStat.numLatePeopleDropoff += 1;
 			default:
 				break;

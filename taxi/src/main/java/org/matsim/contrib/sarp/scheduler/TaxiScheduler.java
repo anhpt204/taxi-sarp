@@ -1,5 +1,6 @@
 package org.matsim.contrib.sarp.scheduler;
 
+import java.util.ArrayList;
 import java.util.List;
 
 import org.kohsuke.rngom.parse.IllegalSchemaException;
@@ -16,6 +17,8 @@ import org.matsim.contrib.dvrp.schedule.StayTask;
 import org.matsim.contrib.dvrp.schedule.Task;
 import org.matsim.contrib.dvrp.util.LinkTimePair;
 import org.matsim.contrib.sarp.data.AbstractRequest;
+import org.matsim.contrib.sarp.route.VehiclePath;
+import org.matsim.contrib.sarp.route.VehicleRoute;
 import org.matsim.contrib.sarp.schedule.TaxiDropoffDriveTask;
 import org.matsim.contrib.sarp.schedule.TaxiDropoffStayTask;
 import org.matsim.contrib.sarp.schedule.TaxiPickupDriveTask;
@@ -23,8 +26,6 @@ import org.matsim.contrib.sarp.schedule.TaxiPickupStayTask;
 import org.matsim.contrib.sarp.schedule.TaxiTask;
 import org.matsim.contrib.sarp.schedule.TaxiTask.TaxiTaskType;
 import org.matsim.contrib.sarp.schedule.TaxiWaitStayTask;
-import org.matsim.contrib.sarp.vehreqpath.VehicleRequestPath;
-import org.matsim.contrib.sarp.vehreqpath.VehicleRequestsRoute;
 
 public class TaxiScheduler 
 {
@@ -78,6 +79,8 @@ public class TaxiScheduler
         return Schedules.isLastTask(currentTask)
                 && currentTask.getTaxiTaskType() == TaxiTaskType.WAIT_STAY;
     }
+    
+    
     /*
      * get the earlist time that this vehicle (veh) is idle
      */
@@ -333,9 +336,9 @@ public class TaxiScheduler
      * @param bestRoute: a new route (serve one people and more than one parcels)
      */
 
-	public void scheduleRequests(VehicleRequestsRoute bestRoute)
+	public void scheduleRequests(VehicleRoute bestRoute)
 	{
-		Schedule<TaxiTask> bestSchedule = TaxiSchedules.getSchedule(bestRoute.vehicle);
+		Schedule<TaxiTask> bestSchedule = TaxiSchedules.getSchedule(bestRoute.getVehicle());
 		//if PLANNED or STARTED
 		if(bestSchedule.getStatus() != ScheduleStatus.UNPLANNED)
 		{
@@ -372,7 +375,7 @@ public class TaxiScheduler
 		//add task to the schedule (bestSchedule)
 		for(int i = 0; i < bestRoute.getPaths().length; i++)
 		{
-			VehicleRequestPath path = bestRoute.getPaths()[i];
+			VehiclePath path = bestRoute.getPaths()[i];
 			//drive to pickup
 			if(path.taskType == TaxiTaskType.PARCEL_PICKUP_DRIVE 
 					|| path.taskType == TaxiTaskType.PEOPLE_PICKUP_DRIVE)
@@ -406,5 +409,7 @@ public class TaxiScheduler
 		
 		appendWaitAfterDropoff(bestSchedule);
 	}
+	
+	
 
 }
