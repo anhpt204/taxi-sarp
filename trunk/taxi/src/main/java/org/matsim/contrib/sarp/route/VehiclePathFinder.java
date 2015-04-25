@@ -337,4 +337,33 @@ public class VehiclePathFinder
 		
 		return paths;
 	}
+
+	/**
+	 * @param vehicle
+	 * @param newPathNode
+	 * @param unplanedRequests 
+	 * @param bestCost
+	 * @return
+	 */
+	public VehicleRoute getRouteAndCalculateCost(Vehicle vehicle,
+			ArrayList<PathNode> newPathNode, 
+			ArrayList<AbstractRequest> unplanedRequests, 
+			VehiclePathCost costCalculator)
+	{
+		PathNode[] nodes = (PathNode[])newPathNode.toArray();
+		VehiclePath[] paths = getPath(vehicle, nodes);
+		
+		if(paths == null)
+			return null;
+		else
+		{
+			VehicleRoute aRoute = new VehicleRoute(vehicle, paths );
+
+			//calculate total benefit
+			
+			double transCost = costCalculator.getCost(aRoute);
+			
+			return aRoute;
+		}
+	}
 }

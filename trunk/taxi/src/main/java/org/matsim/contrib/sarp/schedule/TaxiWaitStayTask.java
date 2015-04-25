@@ -22,4 +22,14 @@ public class TaxiWaitStayTask extends StayTaskImpl
     {
         return "[" + getTaxiTaskType().name() + "]" + super.commonToString();
     }
+
+	/* (non-Javadoc)
+	 * @see org.matsim.contrib.sarp.schedule.TaxiTask#getFromLink()
+	 */
+	@Override
+	public Link getFromLink()
+	{
+		// TODO Auto-generated method stub
+		return super.getLink();
+	}
 }

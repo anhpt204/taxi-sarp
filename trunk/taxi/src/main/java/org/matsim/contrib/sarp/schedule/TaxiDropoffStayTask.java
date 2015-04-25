@@ -1,5 +1,6 @@
 package org.matsim.contrib.sarp.schedule;
 
+import org.matsim.api.core.v01.network.Link;
 import org.matsim.contrib.dvrp.schedule.StayTaskImpl;
 import org.matsim.contrib.sarp.data.AbstractRequest;
 import org.matsim.contrib.sarp.enums.RequestType;
@@ -46,5 +47,15 @@ public class TaxiDropoffStayTask extends StayTaskImpl
     {
         return "[" + getTaxiTaskType().name() + "]" + super.commonToString();
     }
+
+	/* (non-Javadoc)
+	 * @see org.matsim.contrib.sarp.schedule.TaxiTask#getFromLink()
+	 */
+	@Override
+	public Link getFromLink()
+	{
+		// TODO Auto-generated method stub
+		return super.getLink();
+	}
 
 }
