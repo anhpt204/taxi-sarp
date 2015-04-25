@@ -1,5 +1,6 @@
 package org.matsim.contrib.sarp.schedule;
 
+import org.matsim.api.core.v01.network.Link;
 import org.matsim.contrib.dvrp.schedule.Task;
 
 public interface TaxiTask extends Task 
@@ -30,5 +31,7 @@ public interface TaxiTask extends Task
 
 
     TaxiTaskType getTaxiTaskType();
+    
+    Link getFromLink();
 
 }

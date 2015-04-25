@@ -342,7 +342,8 @@ public class TaxiScheduler
 		//if PLANNED or STARTED
 		if(bestSchedule.getStatus() != ScheduleStatus.UNPLANNED)
 		{
-			//get last task of this schedule, WaitStay is always the last task status 
+			//get last task of this schedule, 
+			//WaitStay is always the last task status 
 			TaxiWaitStayTask lastTask = (TaxiWaitStayTask)Schedules.getLastTask(bestSchedule);
 			
 			switch(lastTask.getStatus())
@@ -384,12 +385,10 @@ public class TaxiScheduler
 				
 				//add pickup stay
 				double t1 = Math.max(path.path.getArrivalTime(), path.request.getT0());
-				//tam thoi de nhu vay, can phai xem lai de cap nhat route???
-				//double t = path.path.getArrivalTime();
 				
 				double t2 = t1 + this.params.pickupDuration;
 				
-				bestSchedule.addTask(new TaxiPickupStayTask(path.path.getArrivalTime(), t2, path.request));
+				bestSchedule.addTask(new TaxiPickupStayTask(t1, t2, path.request));
 			}
 			else
 				// drive to drop off
@@ -397,7 +396,7 @@ public class TaxiScheduler
 					|| path.taskType == TaxiTaskType.PEOPLE_DROPOFF_DRIVE)
 				{
 					TaxiDropoffDriveTask dropoffDriveTask = new TaxiDropoffDriveTask(path.path, path.request); 
-					bestSchedule.addTask(dropoffDriveTask);
+					bestSchedule.addTask(dropoffDriveTask);					
 					
 					//add dropoff stay task at arrival time
 					double t = path.path.getArrivalTime();

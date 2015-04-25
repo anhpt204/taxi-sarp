@@ -12,6 +12,7 @@ import java.util.Set;
 
 import org.matsim.contrib.dvrp.data.Vehicle;
 import org.matsim.contrib.dvrp.schedule.Schedule;
+import org.matsim.contrib.dvrp.schedule.Task.TaskType;
 import org.matsim.contrib.dvrp.util.LinkTimePair;
 import org.matsim.contrib.sarp.data.AbstractRequest;
 import org.matsim.contrib.sarp.route.PathCostCalculators;
@@ -20,8 +21,12 @@ import org.matsim.contrib.sarp.route.VehiclePathCost;
 import org.matsim.contrib.sarp.route.VehicleRoute;
 import org.matsim.contrib.sarp.route.PathNode.PathNodeType;
 import org.matsim.contrib.sarp.schedule.TaxiTask;
+import org.matsim.contrib.sarp.schedule.TaxiTask.TaxiTaskType;
+import org.matsim.contrib.sarp.schedule.TaxiTaskWithRequest;
 import org.matsim.contrib.sarp.scheduler.TaxiScheduler;
 import org.matsim.contrib.sarp.scheduler.TaxiSchedules;
+
+import com.google.common.base.CaseFormat;
 
 /**
  * @author pta
@@ -29,6 +34,9 @@ import org.matsim.contrib.sarp.scheduler.TaxiSchedules;
  */
 public class Baoxiang extends AbstractTaxiOptimizer
 {
+
+	private static final int MAXSIZEROUTE = 6;
+
 
 	/**
 	 * @param optimConfig
@@ -80,41 +88,15 @@ public class Baoxiang extends AbstractTaxiOptimizer
 			//if there is not any taxi satisfied, then reject
 			if(feasibleVehicle == null)
 			{
+				// rejection
 				//unplannedPeopleRequests.remove(peopleRequest);
 				plannedPeopleRequest.add(peopleRequest);
 			}
 			else 
-			{
-				//select parcels for planning
-//				Collection<AbstractRequest> selectedParcelRequests = new TreeSet<AbstractRequest>(Requests.ABSOLUTE_COMPARATOR);
-				ArrayList<AbstractRequest> selectedParcelRequests = new ArrayList<>();
-				//AbstractRequest[] parcels = (AbstractRequest[])parcelRequests.toArray();
-				if(unplannedParcelRequests.size() < MAXNUMBERPARCELS)
-				{
-					for(AbstractRequest r : unplannedParcelRequests)
-					{
-						selectedParcelRequests.add(r);
-					}
-				}
-				else
-				{
-					for(AbstractRequest r : unplannedParcelRequests)
-					{
-						selectedParcelRequests.add(r);
-						
-						if(selectedParcelRequests.size() == MAXNUMBERPARCELS)
-							break;
-					}
-				}
-				
-				ArrayList<AbstractRequest> peopleRequests = new ArrayList<>();
-				peopleRequests.add(peopleRequest);
+			{				
 				//find a route with some parcel requests
-				VehicleRoute bestRoute = findBestRoute(feasibleVehicle, 
-						peopleRequests, 
-						selectedParcelRequests, 
-						PathCostCalculators.BEST_COST);
-				
+				VehicleRoute bestRoute = GreedyInsertion(feasibleVehicle, 
+									peopleRequest, unplannedParcelRequests);
 				//if found the best route
 				if(bestRoute != null)
 				{
@@ -180,10 +162,86 @@ public class Baoxiang extends AbstractTaxiOptimizer
 	 * greedy insert all parcels to the route of a vehicle
 	 * @param vehicle: parcels will be inserted in
 	 * @param pacels: parcels to be inserted
-	 * @param costCalculator
+	 * @param unplannedParcelRequests
+	 * @return 
 	 */
-	private void GreedyInsertion(Vehicle vehicle, AbstractRequest pacels, 
-			VehiclePathCost costCalculator)
+	
+	private VehicleRoute greedyInsertion(Vehicle vehicle, 
+			ArrayList<AbstractRequest> unplanedRequests)
+	{
+		Schedule<TaxiTask> schedule = TaxiSchedules.getSchedule(vehicle);
+		
+		List<TaxiTask> unservedTasks = TaxiSchedules.getUnservedTasks(schedule);
+		
+		ArrayList<PathNode> pathNodes = new ArrayList<PathNode>();
+		for (TaxiTask task : unservedTasks)
+		{
+			if(task.getTaxiTaskType() == TaxiTaskType.CRUISE_DRIVE
+				|| task.getTaxiTaskType() == TaxiTaskType.WAIT_STAY)
+				continue;
+			
+			TaxiTaskWithRequest unservedTask = (TaxiTaskWithRequest)task;
+			
+			PathNodeType type = PathNodeType.PICKUP; 
+			if (unservedTask.getTaxiTaskType() == TaxiTaskType.PARCEL_DROPOFF_DRIVE
+					|| unservedTask.getTaxiTaskType() == TaxiTaskType.PARCEL_DROPOFF_STAY
+					|| unservedTask.getTaxiTaskType() == TaxiTaskType.PEOPLE_DROPOFF_DRIVE
+					|| unservedTask.getTaxiTaskType() == TaxiTaskType.PEOPLE_DROPOFF_STAY)
+				type = PathNodeType.DROPOFF;
+					
+					
+			pathNodes.add(new PathNode(unservedTask.getFromLink(), unservedTask.getRequest()
+					, type, unservedTask.getBeginTime()));
+			
+			
+			while (pathNodes.size() < MAXSIZEROUTE)
+			{
+				int size = pathNodes.size();
+				ArrayList<PathNode> newPathNode = new ArrayList<PathNode>();
+
+				for (AbstractRequest request: unplanedRequests)
+				{
+					for(int i = 0; i < size; i++)
+					{
+						// add nodes from 0 to i
+						newPathNode.addAll(pathNodes.subList(0, i));
+						// add a new pickup
+						newPathNode.add(new PathNode(request.getFromLink(), request,
+								PathNodeType.PICKUP, request.getT0()));
+						
+						for (int j = i+1; j < size; j++)
+						{
+							// add node from i to j
+							newPathNode.addAll(pathNodes.subList(i, j));
+							
+							// add a new delivery
+							newPathNode.add(new PathNode(request.getToLink(), request,
+									PathNodeType.DROPOFF, request.getLateDeliveryTime()));
+
+							//add the rest into new path
+							newPathNode.addAll(pathNodes.subList(j, size));
+							
+							
+							VehicleRoute route = optimConfig.vrpFinder.getRouteAndCalculateCost(vehicle, 
+									newPathNode, unplanedRequests, PathCostCalculators.TRANSPORTATION_COST);
+							
+							// calculate total benefits if route is feasible
+							if(route.isFeasible())
+							{
+								
+							}
+						}
+					}
+				}
+				
+			}
+		}
+		
+	}
+	
+	
+	private VehicleRoute neighborhoodSearch(Vehicle vehicle, AbstractRequest peopleRequest, 
+			Collection<AbstractRequest> unplannedParcelRequests)
 			
 	{
 		Schedule<TaxiTask> schedule = TaxiSchedules.getSchedule(vehicle);
