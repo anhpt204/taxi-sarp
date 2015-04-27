@@ -48,6 +48,7 @@ public class VehiclePathFinder
 	}
 	
 	/**
+	 * find a taxi that can go to pickup people at time window with minimum cost
 	 * @param idleVehicles: idle vehicles
 	 * @param peopleRequest: People request
 	 * @return a feasible taxi: can go to pickup this person
@@ -241,18 +242,39 @@ public class VehiclePathFinder
 		{
 			//check path for people request
 			VrpPathWithTravelData peopleTempPath = getPathForPeopleRequest(veh, peopleRequest);
-			
 		}
 		return null;
 	}
 	
+	/**
+	 * get path from current location of taxi to pickup location of request
+	 * @param vehicle
+	 * @param request
+	 * @return path that satisfies time window constraint (vehicle can arrive
+	 * before late pickup time window of request) or null
+	 */
 	private VrpPathWithTravelData getPathForPeopleRequest(Vehicle vehicle, AbstractRequest request)
 	{
-		LinkTimePair departure = this.scheduler.getEarliestIdleness(vehicle);
+		// get (location, time) where vehicle drop off the person
+		LinkTimePair departure = this.scheduler.getEarliestSARVehicle(vehicle);
 		
-		return departure == null? null : this.pathCalculator.calcPath(departure.link, 
+		// calculate shortest path from current location of vehicle 
+		//to pickup location of the request
+		VrpPathWithTravelData path = this.pathCalculator.calcPath(departure.link, 
 				request.getFromLink(), 
 				departure.time);
+		// if not exist a path, return null
+		if (path == null)
+			return null;
+		
+		// check pickup time window
+		// check if vehicle can arrive before late pickup time window, 
+		//then return path
+		double arrivalTime = path.getArrivalTime();
+		if (arrivalTime > request.getT1()) 
+			return path;
+		// else return null
+		return null;
 	}
 	
 	/**
@@ -359,9 +381,44 @@ public class VehiclePathFinder
 		{
 			VehicleRoute aRoute = new VehicleRoute(vehicle, paths );
 
-			//calculate total benefit
+			// shortest distance for people requests
+			double peopleDistance = 0;
+			// total shortest distance for parcel requests
+			double parcelDistance = 0;
 			
+			for (AbstractRequest request: unplanedRequests)
+			{
+				VrpPathWithTravelData tempPath = this.pathCalculator.calcPath(request.getFromLink(), 
+						request.getToLink(), request.getT1());
+				
+				int linkCount = tempPath.getLinkCount();
+
+				if (request.getType() == RequestType.PEOPLE)
+				{
+
+					for (int i = 0; i < linkCount; i++)
+					{
+						Link link = tempPath.getLink(i);
+						peopleDistance += link.getLength();
+						
+					} 
+				}
+				else if (request.getType() == RequestType.PARCEL)
+				{
+					for (int i = 0; i < linkCount; i++)
+					{
+						Link link = tempPath.getLink(i);
+						parcelDistance += link.getLength();
+					}
+				}
+			}
+					
+			aRoute.setShortestPeopleDistance(peopleDistance);
+			aRoute.setShortestParcelDistance(parcelDistance);
+			// transportation cost
 			double transCost = costCalculator.getCost(aRoute);
+			aRoute.setCost(transCost);
+			
 			
 			return aRoute;
 		}
