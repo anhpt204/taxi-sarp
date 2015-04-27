@@ -80,7 +80,44 @@ public class TaxiScheduler
                 && currentTask.getTaxiTaskType() == TaxiTaskType.WAIT_STAY;
     }
     
-    
+    /**
+     * get time that vehicle dropoff a person
+     * @param vehicle
+     * @return
+     */
+    public LinkTimePair getEarliestSARVehicle(Vehicle vehicle)
+	{
+    	//get current time
+    	double currentTime = context.getTime();
+    	
+    	//if current time is more than TW T1 (mean that veh is not working)
+    	if(currentTime > vehicle.getT1())
+    		return null;
+    	
+    	Schedule<TaxiTask> schedule = TaxiSchedules.getSchedule(vehicle);
+    	
+    	Link link;
+    	double time;
+    	
+    	switch (schedule.getStatus())
+		{
+		case PLANNED:
+		case STARTED:
+			TaxiTask personDropoffStay = TaxiSchedules.getPersonDropoffStayTask(schedule);
+			if (personDropoffStay == null)
+				return null;
+			
+			return createValidLinkTimePair(personDropoffStay.getFromLink(), 
+					personDropoffStay.getEndTime(), vehicle);
+			
+		case COMPLETED:
+			return null;
+		case UNPLANNED: //there is always at least one WAIT TASK in a schedule
+						
+		default:
+			throw new IllegalStateException();
+		}
+	}
     /*
      * get the earlist time that this vehicle (veh) is idle
      */

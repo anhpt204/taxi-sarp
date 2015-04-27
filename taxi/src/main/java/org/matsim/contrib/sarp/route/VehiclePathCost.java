@@ -14,5 +14,5 @@ package org.matsim.contrib.sarp.route;
 public interface VehiclePathCost
 {
 	double getCost(VehicleRoute route);
-
+	
 }

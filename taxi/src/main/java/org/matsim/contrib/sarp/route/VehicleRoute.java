@@ -16,6 +16,7 @@ import org.matsim.contrib.dvrp.data.Vehicle;
 import org.matsim.contrib.sarp.data.AbstractRequest;
 import org.matsim.contrib.sarp.data.ParcelRequest;
 import org.matsim.contrib.sarp.data.PeopleRequest;
+import org.matsim.contrib.sarp.enums.RequestType;
 import org.matsim.contrib.sarp.schedule.TaxiTask.TaxiTaskType;
 
 /**
@@ -34,6 +35,10 @@ public class VehicleRoute
 	
 	private double cost;
 
+	private double shortestPeopleDistance;
+	private double shortestParcelDistance;
+	
+	private double totalBenefit;
 	
 	public Vehicle getVehicle()
 	{
@@ -162,19 +167,65 @@ public class VehicleRoute
 	/*
 	 * get total distance of this route
 	 */
-	public double getDistance()
+	public double getRealPeopleDistance()
 	{
+		boolean hasPeople = false;
 		double distance = 0.0;
 		for (VehiclePath p: paths)
 		{
-			int linkCount = p.path.getLinkCount();
-			for (int i = 0; i < linkCount; i++)
+			if (hasPeople)
 			{
-				distance += p.path.getLink(i).getLength();
+				int linkCount = p.path.getLinkCount();
+				for (int i = 0; i < linkCount; i++)
+				{
+					distance += p.path.getLink(i).getLength();
+				}
 			}
+			
+			if (p.taskType == TaxiTaskType.PEOPLE_PICKUP_DRIVE)
+				hasPeople = true;
+			else if (p.taskType == TaxiTaskType.PEOPLE_DROPOFF_DRIVE)
+				hasPeople = false;
+				
 		}
 		
 		return distance;
+	}
+
+
+	public double getShortestPeopleDistance()
+	{
+		return shortestPeopleDistance;
+	}
+
+
+	public void setShortestPeopleDistance(double shortestPeopleDistance)
+	{
+		this.shortestPeopleDistance = shortestPeopleDistance;
+	}
+
+
+	public double getShortestParcelDistance()
+	{
+		return shortestParcelDistance;
+	}
+
+
+	public void setShortestParcelDistance(double shortestParcelDistance)
+	{
+		this.shortestParcelDistance = shortestParcelDistance;
+	}
+
+
+	public double getTotalBenefit()
+	{
+		return totalBenefit;
+	}
+
+
+	public void setTotalBenefit(double totalBenefit)
+	{
+		this.totalBenefit = totalBenefit;
 	}
 
 }

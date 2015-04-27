@@ -72,7 +72,22 @@ public class TaxiSchedules {
 		return unservedTasks;
 	}
     
+    public static TaxiTask getPersonDropoffStayTask(Schedule<TaxiTask> schedule)
+	{
+		int currentTaskIdx = schedule.getCurrentTask().getTaskIdx();
+		List<TaxiTask> tasks = schedule.getTasks();
+		
+		for(int i = currentTaskIdx; i<schedule.getTaskCount(); i++)
+		{
+			TaxiTask currentTask = tasks.get(i);
+			if(currentTask.getTaxiTaskType() == TaxiTaskType.PEOPLE_DROPOFF_STAY)
+				return currentTask;
+		}
+		return null;
+	}
+    
     public static Iterable<AbstractRequest> getUnservedRequests(Schedule<TaxiTask> schedule)
+    
 	{
     	
 		Iterable<TaxiTask> pickupTasks = Iterables.filter(getUnservedTasks(schedule), IS_PICKUP_STAY);

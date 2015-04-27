@@ -4,6 +4,7 @@
 package org.matsim.contrib.sarp.optimizer;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.HashSet;
 import java.util.Iterator;
@@ -94,9 +95,11 @@ public class Baoxiang extends AbstractTaxiOptimizer
 			}
 			else 
 			{				
+				// insert people to the route of the vehicle
+				
+				
 				//find a route with some parcel requests
-				VehicleRoute bestRoute = GreedyInsertion(feasibleVehicle, 
-									peopleRequest, unplannedParcelRequests);
+				VehicleRoute bestRoute = neighborhoodSearch(feasibleVehicle, unplannedParcelRequests);
 				//if found the best route
 				if(bestRoute != null)
 				{
@@ -193,50 +196,67 @@ public class Baoxiang extends AbstractTaxiOptimizer
 			pathNodes.add(new PathNode(unservedTask.getFromLink(), unservedTask.getRequest()
 					, type, unservedTask.getBeginTime()));
 			
+		}
+		while (pathNodes.size() < MAXSIZEROUTE)
+		{
+			int size = pathNodes.size();
+			ArrayList<PathNode> newPathNode = new ArrayList<PathNode>();
+			// deep clone
+			newPathNode.addAll(pathNodes);
 			
-			while (pathNodes.size() < MAXSIZEROUTE)
+			ArrayList<PathNode> bestPathNode = new ArrayList<PathNode>();
+			double bestBenefit = 0;
+			
+			for (AbstractRequest request: unplanedRequests)
 			{
-				int size = pathNodes.size();
-				ArrayList<PathNode> newPathNode = new ArrayList<PathNode>();
-
-				for (AbstractRequest request: unplanedRequests)
+				for(int i = 0; i < size; i++)
 				{
-					for(int i = 0; i < size; i++)
+					// add a new pickup at i
+					newPathNode.add(i, new PathNode(request.getFromLink(), request,
+							PathNodeType.PICKUP, request.getT0()));
+					
+					for (int j = i+1; j < size+1; j++)
 					{
-						// add nodes from 0 to i
-						newPathNode.addAll(pathNodes.subList(0, i));
-						// add a new pickup
-						newPathNode.add(new PathNode(request.getFromLink(), request,
-								PathNodeType.PICKUP, request.getT0()));
 						
-						for (int j = i+1; j < size; j++)
-						{
-							// add node from i to j
-							newPathNode.addAll(pathNodes.subList(i, j));
-							
-							// add a new delivery
-							newPathNode.add(new PathNode(request.getToLink(), request,
-									PathNodeType.DROPOFF, request.getLateDeliveryTime()));
+						// add a new delivery
+						newPathNode.add(j, new PathNode(request.getToLink(), request,
+								PathNodeType.DROPOFF, request.getLateDeliveryTime()));
 
-							//add the rest into new path
-							newPathNode.addAll(pathNodes.subList(j, size));
+						// make a route
+						VehicleRoute route = optimConfig.vrpFinder.getRouteAndCalculateCost(vehicle, 
+								newPathNode, unplanedRequests, PathCostCalculators.TOTAL_BENEFIT);
+						
+						// calculate total benefits if route is feasible
+						if(route.isFeasible())
+						{
+							// get shortest path for people
+							double benefit = route.getTotalBenefit();
 							
-							
-							VehicleRoute route = optimConfig.vrpFinder.getRouteAndCalculateCost(vehicle, 
-									newPathNode, unplanedRequests, PathCostCalculators.TRANSPORTATION_COST);
-							
-							// calculate total benefits if route is feasible
-							if(route.isFeasible())
+							if (bestBenefit < benefit)
 							{
-								
+								bestBenefit = benefit;
+								bestPathNode.clear();
+								bestPathNode.addAll(newPathNode);
 							}
+							
 						}
+						
+						// remove the delivery
+						newPathNode.remove(j);
 					}
+					// remove the pickup
+					newPathNode.remove(i);
 				}
-				
 			}
+			
+			// update new pathNodes
+			pathNodes.clear();
+			pathNodes.addAll(bestPathNode);
 		}
 		
+		return optimConfig.vrpFinder.getRouteAndCalculateCost(vehicle, 
+				pathNodes, unplanedRequests, PathCostCalculators.TOTAL_BENEFIT);
+
 	}
 	
 	

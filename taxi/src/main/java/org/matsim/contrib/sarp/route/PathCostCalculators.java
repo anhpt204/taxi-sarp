@@ -48,32 +48,37 @@ public class PathCostCalculators
 	};
 	
 	
-	private double getDiscount(double expectedDistance, double realDistance)
+	private static double getDiscount(double expectedDistance, double realDistance)
 	{
 		return (realDistance/expectedDistance - 1)*GAMMA4;
 	}
-	private double getCostFuel(double d)
+	private static double getCostFuel(double d)
 	{
 		return d * GAMMA3;
 	}
-	private double getParcelRevenue(double d)
+	private static double getParcelRevenue(double d)
 	{
 		return d*GAMMA2 + BETA;
 	}
-	private double getPeopleRevenue(double d)
+	private static double getPeopleRevenue(double d)
 	{
 		return d*GAMMA1 + ALPHA;
 	}
 	
-	public static final VehiclePathCost TRANSPORTATION_COST = new VehiclePathCost()
+	public static final VehiclePathCost TOTAL_BENEFIT = new VehiclePathCost()
 	{
 		
 		@Override
 		public double getCost(VehicleRoute route)
 		{
-			HashMap peopleDistances = new HashMap();
-			HashMap parcelDistances = new HashMap();
+			// revenue of traveling people
+			double directPeopleDistance = route.getShortestPeopleDistance();
+			double f1 = getPeopleRevenue(directPeopleDistance);
 			
+			// revenue of traveling parcels
+			double f2 = getParcelRevenue(route.getShortestParcelDistance());
+			
+			// transportation cost
 			double distance = 0.0;
 			for(VehiclePath p : route.getPaths())
 			{				
@@ -83,9 +88,16 @@ public class PathCostCalculators
 					distance += p.path.getLink(i).getLength();
 				}
 			}
-			double cost = GAMMA3 * distance;			
-			route.setCost(cost);
-			return cost;
+			
+			double f3 = getCostFuel(distance);
+			
+			// discount for people
+			double realPeopleDistance = route.getRealPeopleDistance();
+			double f4 = getDiscount(directPeopleDistance, realPeopleDistance);
+			
+			double benefit = f1 + f2 - f3 - f4;
+			route.setTotalBenefit(benefit);
+			return benefit;
 		}
 	};
 
