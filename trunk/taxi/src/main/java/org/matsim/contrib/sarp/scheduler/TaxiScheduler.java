@@ -229,6 +229,20 @@ public class TaxiScheduler
     	
     }
     
+    public void appendPeopleRequest(Schedule<TaxiTask> schedule, AbstractRequest peopleRequest)
+	{
+    	// get the last task
+		TaxiWaitStayTask lastTask = (TaxiWaitStayTask)Schedules.getLastTask(schedule);
+    			
+    	// append pickup task
+    	VrpPathWithTravelData path = calculator.calcPath(lastTask.getLink(), peopleRequest.getFromLink(), lastTask.getBeginTime());
+    	schedule.addTask(new TaxiPickupDriveTask(path, peopleRequest));
+    	
+    	appendDropoffAfterPickup(schedule);
+    	appendWaitAfterDropoff(schedule);
+    	
+	}
+    
     public void appendWaitAfterDropoff(Schedule<TaxiTask> schedule)
     {
     	TaxiDropoffStayTask lastTask = (TaxiDropoffStayTask)Schedules.getLastTask(schedule);
