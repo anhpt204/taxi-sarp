@@ -7,12 +7,17 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.HashSet;
+import java.util.Hashtable;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Random;
 import java.util.Set;
 
+import org.matsim.api.core.v01.Id;
+import org.matsim.contrib.dvrp.data.Request;
 import org.matsim.contrib.dvrp.data.Vehicle;
 import org.matsim.contrib.dvrp.schedule.Schedule;
+import org.matsim.contrib.dvrp.schedule.Schedules;
 import org.matsim.contrib.dvrp.schedule.Task.TaskType;
 import org.matsim.contrib.dvrp.util.LinkTimePair;
 import org.matsim.contrib.sarp.data.AbstractRequest;
@@ -95,11 +100,13 @@ public class Baoxiang extends AbstractTaxiOptimizer
 			}
 			else 
 			{				
+				// get schedule of this vehicle
+				Schedule<TaxiTask> schedule = TaxiSchedules.getSchedule(feasibleVehicle);
 				// insert people to the route of the vehicle
-				
+				optimConfig.scheduler.appendPeopleRequest(schedule, peopleRequest);
 				
 				//find a route with some parcel requests
-				VehicleRoute bestRoute = neighborhoodSearch(feasibleVehicle, unplannedParcelRequests);
+				VehicleRoute bestRoute = neighborhoodSearch(schedule, unplannedParcelRequests);
 				//if found the best route
 				if(bestRoute != null)
 				{
@@ -170,33 +177,11 @@ public class Baoxiang extends AbstractTaxiOptimizer
 	 */
 	
 	private VehicleRoute greedyInsertion(Vehicle vehicle, 
+			ArrayList<PathNode> pathNodes, 
 			ArrayList<AbstractRequest> unplanedRequests)
 	{
-		Schedule<TaxiTask> schedule = TaxiSchedules.getSchedule(vehicle);
 		
-		List<TaxiTask> unservedTasks = TaxiSchedules.getUnservedTasks(schedule);
-		
-		ArrayList<PathNode> pathNodes = new ArrayList<PathNode>();
-		for (TaxiTask task : unservedTasks)
-		{
-			if(task.getTaxiTaskType() == TaxiTaskType.CRUISE_DRIVE
-				|| task.getTaxiTaskType() == TaxiTaskType.WAIT_STAY)
-				continue;
-			
-			TaxiTaskWithRequest unservedTask = (TaxiTaskWithRequest)task;
-			
-			PathNodeType type = PathNodeType.PICKUP; 
-			if (unservedTask.getTaxiTaskType() == TaxiTaskType.PARCEL_DROPOFF_DRIVE
-					|| unservedTask.getTaxiTaskType() == TaxiTaskType.PARCEL_DROPOFF_STAY
-					|| unservedTask.getTaxiTaskType() == TaxiTaskType.PEOPLE_DROPOFF_DRIVE
-					|| unservedTask.getTaxiTaskType() == TaxiTaskType.PEOPLE_DROPOFF_STAY)
-				type = PathNodeType.DROPOFF;
-					
-					
-			pathNodes.add(new PathNode(unservedTask.getFromLink(), unservedTask.getRequest()
-					, type, unservedTask.getBeginTime()));
-			
-		}
+		// insert new task
 		while (pathNodes.size() < MAXSIZEROUTE)
 		{
 			int size = pathNodes.size();
@@ -259,12 +244,92 @@ public class Baoxiang extends AbstractTaxiOptimizer
 
 	}
 	
-	
-	private VehicleRoute neighborhoodSearch(Vehicle vehicle, AbstractRequest peopleRequest, 
-			Collection<AbstractRequest> unplannedParcelRequests)
-			
+	private ArrayList<PathNode> getPathNodesOfVehicle(Vehicle vehicle, 
+			ArrayList<AbstractRequest> requests)
 	{
 		Schedule<TaxiTask> schedule = TaxiSchedules.getSchedule(vehicle);
+		// get already tasks in schedule 
+		List<TaxiTask> unservedTasks = TaxiSchedules.getUnservedTasks(schedule);
+		
+		ArrayList<PathNode> pathNodes = new ArrayList<PathNode>();
+		for (TaxiTask task : unservedTasks)
+		{
+			
+			if(task.getTaxiTaskType() == TaxiTaskType.CRUISE_DRIVE
+				|| task.getTaxiTaskType() == TaxiTaskType.WAIT_STAY)
+				continue;
+			// if this task is stay task then ignore
+			if(task.getType() == TaskType.STAY)
+				continue;
+			
+			TaxiTaskWithRequest unservedTask = (TaxiTaskWithRequest)task;
+			
+			
+			PathNodeType type = PathNodeType.PICKUP; 
+			if (unservedTask.getTaxiTaskType() == TaxiTaskType.PARCEL_DROPOFF_DRIVE
+					|| unservedTask.getTaxiTaskType() == TaxiTaskType.PEOPLE_DROPOFF_DRIVE)
+				type = PathNodeType.DROPOFF;
+			
+			// if have a pickup task than insert request of this task into set of requests
+			if(type == PathNodeType.PICKUP)
+				requests.add(unservedTask.getRequest());
+			
+			pathNodes.add(new PathNode(unservedTask.getFromLink(), unservedTask.getRequest()
+					, type, unservedTask.getBeginTime()));
+			
+		}
+		
+		return pathNodes;
+
+	}
+	
+	/**
+	 * 
+	 * @param schedule
+	 * @param unplannedParcelRequests
+	 * @param maxSearches
+	 * @param T0: initial temperature
+	 * @param c: cooling rate
+	 * @return
+	 */
+	private VehicleRoute SimulatedAnnealing(Vehicle vehicle, 
+			ArrayList<AbstractRequest> unplannedParcelRequests,
+			int maxSearches, double T0, double c)
+			
+	{
+		Random rand = new Random();
+		rand.setSeed(1000);
+		
+		VehicleRoute bestRoute = null;
+
+		ArrayList<AbstractRequest> requests = new ArrayList<AbstractRequest>();
+		ArrayList<PathNode> pathNodes = getPathNodesOfVehicle(vehicle, requests);
+		Hashtable<Id<Request>, V>
+		
+		for (int i = 0; i < maxSearches; i++)
+		{
+			//randomly select a request that will be removed
+			AbstractRequest removeRequest = requests.get(rand.nextInt(requests.size()));
+
+			// remove it			
+			ArrayList<PathNode> newPathNodes = new ArrayList<PathNode>();
+			
+			for (PathNode node : pathNodes)
+			{
+				if(node.request.getId().compareTo(removeRequest.getId()) == 0)
+					continue;
+				
+				newPathNodes.add(node);
+				
+			}
+			
+			
+			// reinsert new parcel request by using greedy insertion algorithm
+
+			VehicleRoute route = greedyInsertion(vehicle, newPathNodes, unplannedParcelRequests);
+			
+		}
+		return bestRoute;
 		
 		
 	}
