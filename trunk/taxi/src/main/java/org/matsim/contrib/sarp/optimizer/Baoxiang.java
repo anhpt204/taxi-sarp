@@ -6,6 +6,7 @@ package org.matsim.contrib.sarp.optimizer;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
+import java.util.Enumeration;
 import java.util.HashSet;
 import java.util.Hashtable;
 import java.util.Iterator;
@@ -23,6 +24,7 @@ import org.matsim.contrib.dvrp.util.LinkTimePair;
 import org.matsim.contrib.sarp.data.AbstractRequest;
 import org.matsim.contrib.sarp.route.PathCostCalculators;
 import org.matsim.contrib.sarp.route.PathNode;
+import org.matsim.contrib.sarp.route.VehiclePath;
 import org.matsim.contrib.sarp.route.VehiclePathCost;
 import org.matsim.contrib.sarp.route.VehicleRoute;
 import org.matsim.contrib.sarp.route.PathNode.PathNodeType;
@@ -42,8 +44,15 @@ public class Baoxiang extends AbstractTaxiOptimizer
 {
 
 	private static final int MAXSIZEROUTE = 6;
+	private static final int MAXITERATIONSFORBIDDEN = 5;
+	
+	// parameters for simulated annealing
+	private static final int MAXSEARCHES = 1000;
+	//private static final double INIT_TEMPERATURE = 1000;
+	private static final double COOLING_RATE = 0.99;
 
 
+//	private Hashtable<Id<Vehicle>, VehicleRoute> vehicleRoutes;
 	/**
 	 * @param optimConfig
 	 * @param unplannedPeopleRequests
@@ -54,6 +63,8 @@ public class Baoxiang extends AbstractTaxiOptimizer
 			Collection<AbstractRequest> unplannedParcelRequests)
 	{
 		super(optimConfig, unplannedPeopleRequests, unplannedParcelRequests);
+		
+//		vehicleRoutes = new Hashtable<Id<Vehicle>, VehicleRoute>();
 		// TODO Auto-generated constructor stub
 	}
 
@@ -105,9 +116,11 @@ public class Baoxiang extends AbstractTaxiOptimizer
 				// insert people to the route of the vehicle
 				optimConfig.scheduler.appendPeopleRequest(schedule, peopleRequest);
 				
+				
 				//find a route with some parcel requests
-				VehicleRoute bestRoute = neighborhoodSearch(schedule, unplannedParcelRequests);
-				//if found the best route
+				VehicleRoute bestRoute = SimulatedAnnealing(feasibleVehicle,
+						(ArrayList<AbstractRequest>)unplannedParcelRequests, 
+						MAXSEARCHES, COOLING_RATE);
 				if(bestRoute != null)
 				{
 					//then build schedule for this vehicle
@@ -178,7 +191,8 @@ public class Baoxiang extends AbstractTaxiOptimizer
 	
 	private VehicleRoute greedyInsertion(Vehicle vehicle, 
 			ArrayList<PathNode> pathNodes, 
-			ArrayList<AbstractRequest> unplanedRequests)
+			ArrayList<AbstractRequest> unplanedRequests,
+			VehiclePathCost costCalculator)
 	{
 		
 		// insert new task
@@ -240,18 +254,19 @@ public class Baoxiang extends AbstractTaxiOptimizer
 		}
 		
 		return optimConfig.vrpFinder.getRouteAndCalculateCost(vehicle, 
-				pathNodes, unplanedRequests, PathCostCalculators.TOTAL_BENEFIT);
+				pathNodes, unplanedRequests, costCalculator);
 
 	}
 	
-	private ArrayList<PathNode> getPathNodesOfVehicle(Vehicle vehicle, 
+	private ArrayList<PathNode> getUnservedPathNodes(Vehicle vehicle, 
 			ArrayList<AbstractRequest> requests)
 	{
 		Schedule<TaxiTask> schedule = TaxiSchedules.getSchedule(vehicle);
 		// get already tasks in schedule 
 		List<TaxiTask> unservedTasks = TaxiSchedules.getUnservedTasks(schedule);
-		
+
 		ArrayList<PathNode> pathNodes = new ArrayList<PathNode>();
+		
 		for (TaxiTask task : unservedTasks)
 		{
 			
@@ -292,30 +307,73 @@ public class Baoxiang extends AbstractTaxiOptimizer
 	 * @param c: cooling rate
 	 * @return
 	 */
-	private VehicleRoute SimulatedAnnealing(Vehicle vehicle, 
+	private VehicleRoute SimulatedAnnealing(Vehicle vehicle,
 			ArrayList<AbstractRequest> unplannedParcelRequests,
-			int maxSearches, double T0, double c)
+			int maxSearches, double c,
+			VehiclePathCost costCalculator)
 			
 	{
 		Random rand = new Random();
 		rand.setSeed(1000);
 		
-		VehicleRoute bestRoute = null;
+//		VehicleRoute bestRoute = null;
 
 		ArrayList<AbstractRequest> requests = new ArrayList<AbstractRequest>();
-		ArrayList<PathNode> pathNodes = getPathNodesOfVehicle(vehicle, requests);
-		Hashtable<Id<Request>, V>
+		ArrayList<PathNode> pathNodes = getUnservedPathNodes(vehicle, requests);
+		
+		// get benefit of remaining requests
+		VehicleRoute bestRoute = optimConfig.vrpFinder.getRouteAndCalculateCost(vehicle, pathNodes, requests, costCalculator);
+		
+		Hashtable<Id<Request>, Integer> removedRequests = new Hashtable<Id<Request>, Integer>();
+		
+		double T = 1;
 		
 		for (int i = 0; i < maxSearches; i++)
 		{
+			// increasing number of iterations that requests has been removed 
+			Enumeration<Id<Request>> keys = removedRequests.keys();
+			while(keys.hasMoreElements())
+			{
+				Id<Request> k = keys.nextElement();
+				int v = removedRequests.get(k) + 1;
+				removedRequests.put(k, v);
+			}
+			
 			//randomly select a request that will be removed
-			AbstractRequest removeRequest = requests.get(rand.nextInt(requests.size()));
-
+			AbstractRequest removeRequest = null;
+			while(true)
+			{
+				AbstractRequest tmpRequest = requests.get(rand.nextInt(requests.size()));
+				Id<Request> k = tmpRequest.getId();
+				
+				//	check if it has been removed for 5 iterations
+				
+				if(removedRequests.containsKey(k))
+				{
+					int temp = removedRequests.get(k);
+					if(temp >= MAXITERATIONSFORBIDDEN)
+					{
+						removedRequests.remove(k);
+						removeRequest = tmpRequest;
+						break;
+					}
+				}
+				else 
+				{
+					removedRequests.put(k, 1);
+				}
+			}
+			
+			// if not any more request selected
+			if(removeRequest == null)
+				continue;
+			
 			// remove it			
 			ArrayList<PathNode> newPathNodes = new ArrayList<PathNode>();
 			
 			for (PathNode node : pathNodes)
 			{
+				// if equal, then ignore
 				if(node.request.getId().compareTo(removeRequest.getId()) == 0)
 					continue;
 				
@@ -326,12 +384,24 @@ public class Baoxiang extends AbstractTaxiOptimizer
 			
 			// reinsert new parcel request by using greedy insertion algorithm
 
-			VehicleRoute route = greedyInsertion(vehicle, newPathNodes, unplannedParcelRequests);
+			VehicleRoute route = greedyInsertion(vehicle, newPathNodes, unplannedParcelRequests, costCalculator);
 			
+			if (i == 0) // the first iteration
+			{
+				double x = Math.log(0.5);
+				T = (route.getTotalBenefit()-bestRoute.getTotalBenefit()) / x;
+			}
 		}
 		return bestRoute;
 		
 		
+	}
+	
+	private boolean acceptanceProbability(double oldBenefit, double newBenefit, double T)
+	{
+		double alpha = Math.exp(newBenefit - oldBenefit) / T;
+		
+		return alpha > Math.random();
 	}
 
 }

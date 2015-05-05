@@ -31,6 +31,8 @@ public class VehicleRoute
 	// current parcels on this vehicle
 	private ArrayList<AbstractRequest> parcelRequests;
 	
+	private PathNode[] nodes;
+	
 	private VehiclePath[] paths;
 	
 	private double cost;
@@ -90,11 +92,12 @@ public class VehicleRoute
 	 * @param vehicle
 	 * @param paths
 	 */
-	public VehicleRoute(Vehicle vehicle, VehiclePath[] paths)
+	public VehicleRoute(Vehicle vehicle, VehiclePath[] paths, PathNode[] nodes)
 	{
 		// TODO Auto-generated constructor stub
 		this.vehicle = vehicle;
 		this.paths = paths;
+		this.nodes = nodes;
 		this.peopleRequests = null;
 		this.parcelRequests = null;
 	}
@@ -228,4 +231,30 @@ public class VehicleRoute
 		this.totalBenefit = totalBenefit;
 	}
 
+	public int getPathCount()
+	{
+		return paths.length;
+	}
+	
+	public VehiclePath getLastVehiclePath()
+	{
+		return paths[paths.length-1];
+	}
+
+
+	public PathNode[] getNodes()
+	{
+		return nodes;
+	}
+
+
+	public void setNodes(PathNode[] nodes)
+	{
+		this.nodes = nodes;
+	}
+	
+	public PathNode getLastPathNode()
+	{
+		return nodes[nodes.length-1];
+	}
 }
