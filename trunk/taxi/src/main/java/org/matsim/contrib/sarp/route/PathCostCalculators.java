@@ -93,6 +93,7 @@ public class PathCostCalculators
 			
 			// discount for people
 			double realPeopleDistance = route.getRealPeopleDistance();
+			
 			double f4 = getDiscount(directPeopleDistance, realPeopleDistance);
 			
 			double benefit = f1 + f2 - f3 - f4;

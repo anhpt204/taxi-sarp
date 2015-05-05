@@ -7,6 +7,7 @@ import static org.matsim.contrib.dvrp.run.VrpLauncherUtils.TravelTimeSource.FREE
 
 import org.matsim.contrib.dvrp.run.VrpLauncherUtils.TravelDisutilitySource;
 import org.matsim.contrib.dvrp.run.VrpLauncherUtils.TravelTimeSource;
+import org.matsim.contrib.sarp.optimizer.Baoxiang;
 import org.matsim.contrib.sarp.optimizer.Optimizer1;
 import org.matsim.contrib.sarp.optimizer.TaxiOptimizer;
 import org.matsim.contrib.sarp.optimizer.TaxiOptimizerConfiguration;
@@ -16,12 +17,15 @@ import org.matsim.contrib.sarp.optimizer.TaxiOptimizerConfiguration.Goal;
 public enum AlgorithmConfig
 {	
     NO(AlgorithmType.SIMPLE, Goal.MIN_WAIT_TIME, FREE_FLOW_SPEED, DISTANCE),
+    
+    BAOXIANG(AlgorithmType.BAOXIANG, Goal.MAX_BENEFIT, FREE_FLOW_SPEED, DISTANCE),
 
 	MIP_TW_FF(AlgorithmType.MIP, Goal.MIN_WAIT_TIME, FREE_FLOW_SPEED, TIME);
 	 
 	static enum AlgorithmType
     {
 		SIMPLE,
+		BAOXIANG,
 		MIP
     }
     
@@ -47,6 +51,8 @@ public enum AlgorithmConfig
     	{
     	case SIMPLE:
     		return new Optimizer1(optimizerConfig);
+    	case BAOXIANG:
+    		return new Baoxiang(optimizerConfig);
     	default:
     		return null;
     	}
