@@ -148,6 +148,17 @@ public class VehiclePathFinder
 	}
 	*/
 	
+	public VehicleRoute getRoute(Vehicle vehicle,
+			PathNode[] nodes)
+	{
+		if(nodes == null)
+			return null;
+		
+		VehiclePath[] paths = getPath(vehicle, nodes);
+		
+		return new VehicleRoute(vehicle, paths, nodes);
+	}
+	
 	/**
 	 * route = pickup people, [pickup parcel i, dropoff parcel i], dropoff people
 	 * @param vehicle
@@ -170,7 +181,9 @@ public class VehiclePathFinder
 		{
 			VehicleRoute aRoute = new VehicleRoute(vehicle, 
 					peopleRequests, parcelRequests, paths );
-			double cost = costCalculator.getCost(aRoute);
+			
+			if(costCalculator != null)
+				costCalculator.getCost(aRoute);
 			
 			return aRoute;
 		}
@@ -379,7 +392,7 @@ public class VehiclePathFinder
 			return null;
 		else
 		{
-			VehicleRoute aRoute = new VehicleRoute(vehicle, paths );
+			VehicleRoute aRoute = new VehicleRoute(vehicle, paths, nodes);
 
 			// shortest distance for people requests
 			double peopleDistance = 0;

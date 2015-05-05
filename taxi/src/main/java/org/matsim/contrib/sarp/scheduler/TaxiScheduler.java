@@ -390,6 +390,7 @@ public class TaxiScheduler
 	public void scheduleRequests(VehicleRoute bestRoute)
 	{
 		Schedule<TaxiTask> bestSchedule = TaxiSchedules.getSchedule(bestRoute.getVehicle());
+		
 		//if PLANNED or STARTED
 		if(bestSchedule.getStatus() != ScheduleStatus.UNPLANNED)
 		{
