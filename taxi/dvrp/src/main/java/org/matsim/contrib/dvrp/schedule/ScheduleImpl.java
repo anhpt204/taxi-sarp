@@ -74,7 +74,8 @@ public class ScheduleImpl<T extends AbstractTask>
 
     public void addTask(T task)
     {
-        addTask(tasks.size(), task);
+        
+    	addTask(tasks.size(), task);
     }
 
 

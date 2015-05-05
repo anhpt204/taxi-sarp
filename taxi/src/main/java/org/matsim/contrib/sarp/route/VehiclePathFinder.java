@@ -63,6 +63,9 @@ public class VehiclePathFinder
 		for(Vehicle veh : idleVehicles)
 		{
 			VrpPathWithTravelData path = getPathForPeopleRequest(veh, peopleRequest);
+			if (path == null)
+				continue;
+				
 			double cost = path.getTravelCost();
 			
 			//
@@ -270,7 +273,8 @@ public class VehiclePathFinder
 	{
 		// get (location, time) where vehicle drop off the person
 		LinkTimePair departure = this.scheduler.getEarliestSARVehicle(vehicle);
-		
+		if (departure == null)
+			return null;
 		// calculate shortest path from current location of vehicle 
 		//to pickup location of the request
 		VrpPathWithTravelData path = this.pathCalculator.calcPath(departure.link, 
@@ -284,7 +288,7 @@ public class VehiclePathFinder
 		// check if vehicle can arrive before late pickup time window, 
 		//then return path
 		double arrivalTime = path.getArrivalTime();
-		if (arrivalTime > request.getT1()) 
+		if (arrivalTime < request.getT1()) 
 			return path;
 		// else return null
 		return null;
@@ -376,16 +380,20 @@ public class VehiclePathFinder
 	/**
 	 * @param vehicle
 	 * @param newPathNode
-	 * @param unplanedRequests 
+	 * @param unplanedParcelRequests 
 	 * @param bestCost
 	 * @return
 	 */
 	public VehicleRoute getRouteAndCalculateCost(Vehicle vehicle,
 			ArrayList<PathNode> newPathNode, 
-			ArrayList<AbstractRequest> unplanedRequests, 
+			ArrayList<AbstractRequest> unplanedParcelRequests,
+			ArrayList<AbstractRequest> unplanedPeopleRequests,			
 			VehiclePathCost costCalculator)
 	{
-		PathNode[] nodes = (PathNode[])newPathNode.toArray();
+		PathNode[] nodes = new PathNode[newPathNode.size()];
+		for(int i = 0; i < nodes.length; i++)
+			nodes[i] = newPathNode.get(i);
+		
 		VehiclePath[] paths = getPath(vehicle, nodes);
 		
 		if(paths == null)
@@ -394,6 +402,9 @@ public class VehiclePathFinder
 		{
 			VehicleRoute aRoute = new VehicleRoute(vehicle, paths, nodes);
 
+			ArrayList<AbstractRequest> unplanedRequests = new ArrayList<AbstractRequest>();
+			unplanedRequests.addAll(unplanedParcelRequests);
+			unplanedRequests.addAll(unplanedPeopleRequests);
 			// shortest distance for people requests
 			double peopleDistance = 0;
 			// total shortest distance for parcel requests

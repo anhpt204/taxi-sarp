@@ -20,7 +20,7 @@ taxisFile              taxi-25.xml
 #changeEventsFile       ------
 
 #type of the available dispatching algorithms
-algorithmConfig        NO
+algorithmConfig        BAOXIANG
 
 #limit Dijkstra algorithm to the n nearest requests relatie to a given vehicle (based on straight-line distance)
 nearestRequestsLimit    25

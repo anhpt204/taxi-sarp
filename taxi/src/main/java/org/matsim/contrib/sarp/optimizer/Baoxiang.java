@@ -13,15 +13,18 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Random;
 import java.util.Set;
+import java.util.TreeSet;
 
 import org.matsim.api.core.v01.Id;
 import org.matsim.contrib.dvrp.data.Request;
+import org.matsim.contrib.dvrp.data.Requests;
 import org.matsim.contrib.dvrp.data.Vehicle;
 import org.matsim.contrib.dvrp.schedule.Schedule;
 import org.matsim.contrib.dvrp.schedule.Schedules;
 import org.matsim.contrib.dvrp.schedule.Task.TaskType;
 import org.matsim.contrib.dvrp.util.LinkTimePair;
 import org.matsim.contrib.sarp.data.AbstractRequest;
+import org.matsim.contrib.sarp.enums.RequestType;
 import org.matsim.contrib.sarp.route.PathCostCalculators;
 import org.matsim.contrib.sarp.route.PathNode;
 import org.matsim.contrib.sarp.route.VehiclePath;
@@ -58,11 +61,10 @@ public class Baoxiang extends AbstractTaxiOptimizer
 	 * @param unplannedPeopleRequests
 	 * @param unplannedParcelRequests
 	 */
-	public Baoxiang(TaxiOptimizerConfiguration optimConfig,
-			Collection<AbstractRequest> unplannedPeopleRequests,
-			Collection<AbstractRequest> unplannedParcelRequests)
+	public Baoxiang(TaxiOptimizerConfiguration optimConfig)
 	{
-		super(optimConfig, unplannedPeopleRequests, unplannedParcelRequests);
+		super(optimConfig, new TreeSet<AbstractRequest>(Requests.ABSOLUTE_COMPARATOR),
+				new TreeSet<AbstractRequest>(Requests.ABSOLUTE_COMPARATOR));
 		
 //		vehicleRoutes = new Hashtable<Id<Vehicle>, VehicleRoute>();
 		// TODO Auto-generated constructor stub
@@ -116,11 +118,13 @@ public class Baoxiang extends AbstractTaxiOptimizer
 				// insert people to the route of the vehicle
 				optimConfig.scheduler.appendPeopleRequest(schedule, peopleRequest);
 				
-				
+				ArrayList<AbstractRequest> parcels = new ArrayList<AbstractRequest>();
+				for(AbstractRequest parcel: unplannedParcelRequests)
+					parcels.add(parcel);
 				//find a route with some parcel requests
 				VehicleRoute bestRoute = SimulatedAnnealing(feasibleVehicle,
-						(ArrayList<AbstractRequest>)unplannedParcelRequests, 
-						MAXSEARCHES, COOLING_RATE);
+						parcels, 
+						MAXSEARCHES, COOLING_RATE, PathCostCalculators.TOTAL_BENEFIT);
 				if(bestRoute != null)
 				{
 					//then build schedule for this vehicle
@@ -196,7 +200,7 @@ public class Baoxiang extends AbstractTaxiOptimizer
 	{
 		
 		// insert new task
-		while (pathNodes.size() < MAXSIZEROUTE)
+		while (!unplanedRequests.isEmpty() && pathNodes.size() < MAXSIZEROUTE)
 		{
 			int size = pathNodes.size();
 			ArrayList<PathNode> newPathNode = new ArrayList<PathNode>();
@@ -259,7 +263,7 @@ public class Baoxiang extends AbstractTaxiOptimizer
 	}
 	
 	private ArrayList<PathNode> getUnservedPathNodes(Vehicle vehicle, 
-			ArrayList<AbstractRequest> requests)
+			ArrayList<AbstractRequest> requests, ArrayList<AbstractRequest> unservedPeopleRequests)
 	{
 		Schedule<TaxiTask> schedule = TaxiSchedules.getSchedule(vehicle);
 		// get already tasks in schedule 
@@ -287,8 +291,13 @@ public class Baoxiang extends AbstractTaxiOptimizer
 			
 			// if have a pickup task than insert request of this task into set of requests
 			if(type == PathNodeType.PICKUP)
-				requests.add(unservedTask.getRequest());
-			
+			{
+				if (unservedTask.getRequest().getType() == RequestType.PARCEL)
+					requests.add(unservedTask.getRequest());
+				else if (unservedTask.getRequest().getType() == RequestType.PEOPLE) {
+					unservedPeopleRequests.add(unservedTask.getRequest());
+				}
+			}
 			pathNodes.add(new PathNode(unservedTask.getFromLink(), unservedTask.getRequest()
 					, type, unservedTask.getBeginTime()));
 			
@@ -318,11 +327,16 @@ public class Baoxiang extends AbstractTaxiOptimizer
 		
 //		VehicleRoute bestRoute = null;
 
-		ArrayList<AbstractRequest> requests = new ArrayList<AbstractRequest>();
-		ArrayList<PathNode> pathNodes = getUnservedPathNodes(vehicle, requests);
+		ArrayList<AbstractRequest> unservedParcelRequests = new ArrayList<AbstractRequest>();
+		ArrayList<AbstractRequest> unservedPeopleRequests = new ArrayList<AbstractRequest>();
+		
+		ArrayList<PathNode> pathNodes = getUnservedPathNodes(vehicle, unservedParcelRequests, unservedPeopleRequests);
 		
 		// get benefit of remaining requests
-		VehicleRoute bestRoute = optimConfig.vrpFinder.getRouteAndCalculateCost(vehicle, pathNodes, requests, costCalculator);
+		VehicleRoute bestRoute = optimConfig.vrpFinder.getRouteAndCalculateCost(vehicle, pathNodes, unservedParcelRequests, unservedPeopleRequests, costCalculator);
+		
+		if (unplannedParcelRequests.isEmpty())
+			return bestRoute;
 		
 		Hashtable<Id<Request>, Integer> removedRequests = new Hashtable<Id<Request>, Integer>();
 		
@@ -343,7 +357,10 @@ public class Baoxiang extends AbstractTaxiOptimizer
 			AbstractRequest removeRequest = null;
 			while(true)
 			{
-				AbstractRequest tmpRequest = requests.get(rand.nextInt(requests.size()));
+				if (unservedParcelRequests.isEmpty())
+					break;
+				
+				AbstractRequest tmpRequest = unservedParcelRequests.get(rand.nextInt(unservedParcelRequests.size()));
 				Id<Request> k = tmpRequest.getId();
 				
 				//	check if it has been removed for 5 iterations
@@ -365,7 +382,7 @@ public class Baoxiang extends AbstractTaxiOptimizer
 			}
 			
 			// if not any more request selected
-			if(removeRequest == null)
+			if(removeRequest == null && !unplannedParcelRequests.isEmpty())
 				continue;
 			
 			// remove it			
@@ -374,7 +391,8 @@ public class Baoxiang extends AbstractTaxiOptimizer
 			for (PathNode node : pathNodes)
 			{
 				// if equal, then ignore
-				if(node.request.getId().compareTo(removeRequest.getId()) == 0)
+				if(removeRequest != null
+						&& node.request.getId().compareTo(removeRequest.getId()) == 0)
 					continue;
 				
 				newPathNodes.add(node);

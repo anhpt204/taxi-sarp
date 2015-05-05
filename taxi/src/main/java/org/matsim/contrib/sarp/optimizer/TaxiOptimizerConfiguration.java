@@ -10,7 +10,11 @@ public class TaxiOptimizerConfiguration
 {
 	public static enum Goal
     {
-        MIN_WAIT_TIME, MIN_PICKUP_TIME, DEMAND_SUPPLY_EQUIL, NULL
+        MIN_WAIT_TIME, 
+        MIN_PICKUP_TIME, 
+        DEMAND_SUPPLY_EQUIL,
+        MAX_BENEFIT,
+        NULL
     };
     
     public final MatsimVrpContext context;

@@ -17,6 +17,7 @@ public class TaxiPickupDriveTask extends DriveTaskImpl
 		if(request.getFromLink() != path.getToLink())
 			throw new IllegalArgumentException();
 		this.request = request;
+		
 		request.setPickupDriveTask(this);
 		
 	}

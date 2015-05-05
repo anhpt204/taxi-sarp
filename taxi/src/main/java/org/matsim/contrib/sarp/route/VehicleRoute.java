@@ -176,6 +176,9 @@ public class VehicleRoute
 		double distance = 0.0;
 		for (VehiclePath p: paths)
 		{
+			if (p.taskType == TaxiTaskType.PEOPLE_DROPOFF_DRIVE)
+				hasPeople = true;
+			
 			if (hasPeople)
 			{
 				int linkCount = p.path.getLinkCount();
@@ -183,12 +186,10 @@ public class VehicleRoute
 				{
 					distance += p.path.getLink(i).getLength();
 				}
+				hasPeople = false;
 			}
 			
-			if (p.taskType == TaxiTaskType.PEOPLE_PICKUP_DRIVE)
-				hasPeople = true;
-			else if (p.taskType == TaxiTaskType.PEOPLE_DROPOFF_DRIVE)
-				hasPeople = false;
+			
 				
 		}
 		

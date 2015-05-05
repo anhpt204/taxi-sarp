@@ -30,7 +30,7 @@ public class DriveTaskImpl
 
 
     public DriveTaskImpl(VrpPathWithTravelData path)
-    {
+    {    	
         super(path.getDepartureTime(), path.getArrivalTime());
         this.path = path;
     }

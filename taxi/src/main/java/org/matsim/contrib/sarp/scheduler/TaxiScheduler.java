@@ -19,6 +19,7 @@ import org.matsim.contrib.dvrp.util.LinkTimePair;
 import org.matsim.contrib.sarp.data.AbstractRequest;
 import org.matsim.contrib.sarp.route.VehiclePath;
 import org.matsim.contrib.sarp.route.VehicleRoute;
+import org.matsim.contrib.sarp.schedule.TaxiCruiseDriveTask;
 import org.matsim.contrib.sarp.schedule.TaxiDropoffDriveTask;
 import org.matsim.contrib.sarp.schedule.TaxiDropoffStayTask;
 import org.matsim.contrib.sarp.schedule.TaxiPickupDriveTask;
@@ -105,8 +106,12 @@ public class TaxiScheduler
 		case STARTED:
 			TaxiTask personDropoffStay = TaxiSchedules.getPersonDropoffStayTask(schedule);
 			if (personDropoffStay == null)
-				return null;
-			
+			{
+				TaxiTask currentTask = schedule.getCurrentTask();
+				Link currentLink = currentTask.getFromLink();
+
+				return createValidLinkTimePair(currentLink, currentTime, vehicle);
+			}
 			return createValidLinkTimePair(personDropoffStay.getFromLink(), 
 					personDropoffStay.getEndTime(), vehicle);
 			
@@ -233,10 +238,33 @@ public class TaxiScheduler
 	{
     	// get the last task
 		TaxiWaitStayTask lastTask = (TaxiWaitStayTask)Schedules.getLastTask(schedule);
-    			
+
+		// calculate departure time
+		// if there are more than one task, then 
+		double departureTime = lastTask.getBeginTime();
+		// else then departure time = now
+    	if(schedule.getTaskCount() == 1)
+    		departureTime = context.getTime();
+
+    	departureTime += 1; // start at next time
+    	lastTask.setEndTime(departureTime); 
+    	
     	// append pickup task
-    	VrpPathWithTravelData path = calculator.calcPath(lastTask.getLink(), peopleRequest.getFromLink(), lastTask.getBeginTime());
-    	schedule.addTask(new TaxiPickupDriveTask(path, peopleRequest));
+    	VrpPathWithTravelData path = calculator.calcPath(lastTask.getLink(), peopleRequest.getFromLink(), departureTime);    	
+    	
+    	TaxiPickupDriveTask pickupDriveTask = new TaxiPickupDriveTask(path, peopleRequest); 
+
+    	//add pickup stay
+		double t1 = Math.max(path.getArrivalTime(), peopleRequest.getT0());
+		
+		double t2 = t1 + this.params.pickupDuration;
+		
+		
+//		pickupDriveTask.setEndTime(t1);
+    	schedule.addTask(pickupDriveTask);
+
+		schedule.addTask(new TaxiPickupStayTask(path.getArrivalTime(), t2, peopleRequest));
+		
     	
     	appendDropoffAfterPickup(schedule);
     	appendWaitAfterDropoff(schedule);
@@ -433,14 +461,18 @@ public class TaxiScheduler
 			if(path.taskType == TaxiTaskType.PARCEL_PICKUP_DRIVE 
 					|| path.taskType == TaxiTaskType.PEOPLE_PICKUP_DRIVE)
 			{
-				bestSchedule.addTask(new TaxiPickupDriveTask(path.path, path.request));
+				TaxiPickupDriveTask pickupDriveTask = new TaxiPickupDriveTask(path.path, path.request); 
 				
 				//add pickup stay
 				double t1 = Math.max(path.path.getArrivalTime(), path.request.getT0());
 				
 				double t2 = t1 + this.params.pickupDuration;
 				
-				bestSchedule.addTask(new TaxiPickupStayTask(t1, t2, path.request));
+				pickupDriveTask.setEndTime(t1);
+				bestSchedule.addTask(pickupDriveTask);
+				
+				
+				bestSchedule.addTask(new TaxiPickupStayTask(path.path.getArrivalTime(), t2, path.request));
 			}
 			else
 				// drive to drop off
