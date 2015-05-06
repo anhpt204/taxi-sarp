@@ -468,7 +468,7 @@ public class TaxiScheduler
 				
 				double t2 = t1 + this.params.pickupDuration;
 				
-				pickupDriveTask.setEndTime(t1);
+//				pickupDriveTask.setEndTime(t1);
 				bestSchedule.addTask(pickupDriveTask);
 				
 				

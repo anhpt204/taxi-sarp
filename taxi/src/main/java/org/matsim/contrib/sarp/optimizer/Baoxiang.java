@@ -121,6 +121,7 @@ public class Baoxiang extends AbstractTaxiOptimizer
 				ArrayList<AbstractRequest> parcels = new ArrayList<AbstractRequest>();
 				for(AbstractRequest parcel: unplannedParcelRequests)
 					parcels.add(parcel);
+				
 				//find a route with some parcel requests
 				VehicleRoute bestRoute = SimulatedAnnealing(feasibleVehicle,
 						parcels, 
@@ -196,6 +197,7 @@ public class Baoxiang extends AbstractTaxiOptimizer
 	private VehicleRoute greedyInsertion(Vehicle vehicle, 
 			ArrayList<PathNode> pathNodes, 
 			ArrayList<AbstractRequest> unplanedRequests,
+			ArrayList<AbstractRequest> unservedPeopleRequests,
 			VehiclePathCost costCalculator)
 	{
 		
@@ -227,7 +229,10 @@ public class Baoxiang extends AbstractTaxiOptimizer
 
 						// make a route
 						VehicleRoute route = optimConfig.vrpFinder.getRouteAndCalculateCost(vehicle, 
-								newPathNode, unplanedRequests, PathCostCalculators.TOTAL_BENEFIT);
+								newPathNode, 
+								unplanedRequests,
+								unservedPeopleRequests,
+								PathCostCalculators.TOTAL_BENEFIT);
 						
 						// calculate total benefits if route is feasible
 						if(route.isFeasible())
@@ -258,7 +263,8 @@ public class Baoxiang extends AbstractTaxiOptimizer
 		}
 		
 		return optimConfig.vrpFinder.getRouteAndCalculateCost(vehicle, 
-				pathNodes, unplanedRequests, costCalculator);
+				pathNodes, unplanedRequests, unservedPeopleRequests,
+				costCalculator);
 
 	}
 	
@@ -270,6 +276,7 @@ public class Baoxiang extends AbstractTaxiOptimizer
 		List<TaxiTask> unservedTasks = TaxiSchedules.getUnservedTasks(schedule);
 
 		ArrayList<PathNode> pathNodes = new ArrayList<PathNode>();
+		
 		
 		for (TaxiTask task : unservedTasks)
 		{
@@ -298,9 +305,18 @@ public class Baoxiang extends AbstractTaxiOptimizer
 					unservedPeopleRequests.add(unservedTask.getRequest());
 				}
 			}
-			pathNodes.add(new PathNode(unservedTask.getFromLink(), unservedTask.getRequest()
-					, type, unservedTask.getBeginTime()));
+			if(pathNodes.isEmpty())
+				pathNodes.add(new PathNode(unservedTask.getFromLink(), 
+						null, 
+						PathNodeType.START, unservedTask.getBeginTime()));
 			
+			if(type == PathNodeType.PICKUP)
+				pathNodes.add(new PathNode(unservedTask.getRequest().getFromLink(), 
+						unservedTask.getRequest(), type, 0));
+			else {
+				pathNodes.add(new PathNode(unservedTask.getRequest().getToLink(),
+				unservedTask.getRequest(), type, 0));
+			}
 		}
 		
 		return pathNodes;
@@ -402,7 +418,10 @@ public class Baoxiang extends AbstractTaxiOptimizer
 			
 			// reinsert new parcel request by using greedy insertion algorithm
 
-			VehicleRoute route = greedyInsertion(vehicle, newPathNodes, unplannedParcelRequests, costCalculator);
+			VehicleRoute route = greedyInsertion(vehicle, newPathNodes, 
+					unplannedParcelRequests,
+					unservedPeopleRequests,
+					costCalculator);
 			
 			if (i == 0) // the first iteration
 			{
