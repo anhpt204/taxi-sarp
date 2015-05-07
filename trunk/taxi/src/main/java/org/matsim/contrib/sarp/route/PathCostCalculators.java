@@ -78,7 +78,7 @@ public class PathCostCalculators
 			// revenue of traveling parcels
 			double f2 = getParcelRevenue(route.getShortestParcelDistance());
 			
-			// transportation cost
+			// calculate real distance
 			double distance = 0.0;
 			for(VehiclePath p : route.getPaths())
 			{				
@@ -88,6 +88,8 @@ public class PathCostCalculators
 					distance += p.path.getLink(i).getLength();
 				}
 			}
+
+			// transportation cost
 			
 			double f3 = getCostFuel(distance);
 			

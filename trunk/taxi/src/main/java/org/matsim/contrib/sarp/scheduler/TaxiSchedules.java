@@ -10,6 +10,7 @@ import org.matsim.contrib.dvrp.data.Vehicle;
 import org.matsim.contrib.dvrp.schedule.Schedule;
 import org.matsim.contrib.dvrp.schedule.Schedules;
 import org.matsim.contrib.dvrp.schedule.Task;
+import org.matsim.contrib.dvrp.schedule.Task.TaskType;
 import org.matsim.contrib.sarp.data.AbstractRequest;
 import org.matsim.contrib.sarp.schedule.TaxiTask;
 import org.matsim.contrib.sarp.schedule.TaxiTask.TaxiTaskType;
@@ -55,7 +56,12 @@ public class TaxiSchedules {
         return Iterables.transform(pickupTasks, TAXI_TASK_TO_REQUEST);
     }
     
-    public static List<TaxiTask> getUnservedTasks(Schedule<TaxiTask> schedule)
+    /**
+     * get remaining drive tasks (from next task)
+     * @param schedule
+     * @return List of tasks
+     */
+    public static List<TaxiTask> getUnservedDriveTasks(Schedule<TaxiTask> schedule)
 	{
     	List<TaxiTask> unservedTasks = new ArrayList();
 		
@@ -64,13 +70,24 @@ public class TaxiSchedules {
 		int scheduleSize = schedule.getTaskCount();
 		List<TaxiTask> tasks = schedule.getTasks();
 		
+		// from next task
 		for(int i = currentTaskIdx+1; i < scheduleSize; i++)
 		{
-			unservedTasks.add(tasks.get(i));
+			TaxiTask task = tasks.get(i);
+			if (task.getType() == TaskType.DRIVE)
+				unservedTasks.add(tasks.get(i));
 			
 		}
+		
 		return unservedTasks;
 	}
+    
+    /**
+     * remove all remaining tasks (from next task)
+     * @param schedule
+     * @return List of tasks
+     */
+
     
     public static TaxiTask getPersonDropoffStayTask(Schedule<TaxiTask> schedule)
 	{
@@ -90,7 +107,7 @@ public class TaxiSchedules {
     
 	{
     	
-		Iterable<TaxiTask> pickupTasks = Iterables.filter(getUnservedTasks(schedule), IS_PICKUP_STAY);
+		Iterable<TaxiTask> pickupTasks = Iterables.filter(getUnservedDriveTasks(schedule), IS_PICKUP_STAY);
 		return Iterables.transform(pickupTasks, TAXI_TASK_TO_REQUEST);
 	}
 }

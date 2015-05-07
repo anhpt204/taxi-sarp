@@ -17,14 +17,17 @@ import org.matsim.contrib.dvrp.schedule.StayTask;
 import org.matsim.contrib.dvrp.schedule.Task;
 import org.matsim.contrib.dvrp.util.LinkTimePair;
 import org.matsim.contrib.sarp.data.AbstractRequest;
+import org.matsim.contrib.sarp.route.PathNode;
 import org.matsim.contrib.sarp.route.VehiclePath;
 import org.matsim.contrib.sarp.route.VehicleRoute;
+import org.matsim.contrib.sarp.route.PathNode.PathNodeType;
 import org.matsim.contrib.sarp.schedule.TaxiCruiseDriveTask;
 import org.matsim.contrib.sarp.schedule.TaxiDropoffDriveTask;
 import org.matsim.contrib.sarp.schedule.TaxiDropoffStayTask;
 import org.matsim.contrib.sarp.schedule.TaxiPickupDriveTask;
 import org.matsim.contrib.sarp.schedule.TaxiPickupStayTask;
 import org.matsim.contrib.sarp.schedule.TaxiTask;
+import org.matsim.contrib.sarp.schedule.TaxiTaskWithRequest;
 import org.matsim.contrib.sarp.schedule.TaxiTask.TaxiTaskType;
 import org.matsim.contrib.sarp.schedule.TaxiWaitStayTask;
 
@@ -238,17 +241,25 @@ public class TaxiScheduler
 	{
     	// get the last task
 		TaxiWaitStayTask lastTask = (TaxiWaitStayTask)Schedules.getLastTask(schedule);
-
+		// get current task
+		TaxiTask currentTask = schedule.getCurrentTask();
+		
 		// calculate departure time
 		// if there are more than one task, then 
 		double departureTime = lastTask.getBeginTime();
-		// else then departure time = now
-    	if(schedule.getTaskCount() == 1)
+		// if current task == last task
+    	if(currentTask.getTaxiTaskType() == TaxiTaskType.WAIT_STAY)
+    	{
     		departureTime = context.getTime();
-
-    	departureTime += 1; // start at next time
-    	lastTask.setEndTime(departureTime); 
-    	
+    		departureTime += 1; // start at next time
+    		currentTask.setEndTime(departureTime); 
+    	}
+    	else 
+    	{
+    		// remove the last task
+    		schedule.removeLastTask();
+			
+		}
     	// append pickup task
     	VrpPathWithTravelData path = calculator.calcPath(lastTask.getLink(), peopleRequest.getFromLink(), departureTime);    	
     	
@@ -493,6 +504,57 @@ public class TaxiScheduler
 		appendWaitAfterDropoff(bestSchedule);
 	}
 	
-	
+    public void removeUnservedTasks(Vehicle vehicle)
+	{
+    	Schedule<TaxiTask> schedule = TaxiSchedules.getSchedule(vehicle);
+    	
+    	List<TaxiTask> unservedTasks = new ArrayList();
+		
+		Task currentTask = schedule.getCurrentTask();
+		int currentTaskIdx = currentTask.getTaskIdx();
+		int scheduleSize = schedule.getTaskCount();
+		List<TaxiTask> tasks = schedule.getTasks();
+		
+		// from next task
+		for(int i = currentTaskIdx+1; i < scheduleSize; i++)
+		{
+			schedule.removeLastTask();
+		}
+		
+		appendWaitAfterRemoving(schedule);
+	}
+
+	private void appendWaitAfterRemoving(Schedule<TaxiTask> schedule)
+	{
+		TaxiTask lastTask = Schedules.getLastTask(schedule);
+    	double endTimeOfVehicle = schedule.getVehicle().getT1();
+		double endTime = Math.max(endTimeOfVehicle,  lastTask.getEndTime());
+    	
+		switch (lastTask.getTaxiTaskType())
+		{
+		case WAIT_STAY:
+		case STRATEGIC_WAIT_STAY:
+			schedule.addTask(new TaxiWaitStayTask(lastTask.getEndTime(), endTime, lastTask.getFromLink()));
+			break;
+
+		case PEOPLE_PICKUP_DRIVE:
+		case PEOPLE_PICKUP_STAY:
+		case PARCEL_PICKUP_DRIVE:
+		case PARCEL_PICKUP_STAY:
+		case DUMMY_PICKUP_DRIVE:
+			TaxiTaskWithRequest currentRequestTask = (TaxiTaskWithRequest)lastTask;
+			AbstractRequest request = currentRequestTask.getRequest();
+			schedule.addTask(new TaxiWaitStayTask(lastTask.getEndTime(), endTime, request.getFromLink()));
+			break;
+			
+		default:
+			TaxiTaskWithRequest currentDropoffTask = (TaxiTaskWithRequest)lastTask;
+			AbstractRequest r = currentDropoffTask.getRequest();
+			
+			schedule.addTask(new TaxiWaitStayTask(lastTask.getEndTime(), endTime, r.getToLink()));
+			break;
+
+		}
+	}
 
 }

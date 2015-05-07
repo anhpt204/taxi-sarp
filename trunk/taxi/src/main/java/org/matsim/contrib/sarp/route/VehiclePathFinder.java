@@ -159,7 +159,7 @@ public class VehiclePathFinder
 		
 		VehiclePath[] paths = getPath(vehicle, nodes);
 		
-		return new VehicleRoute(vehicle, paths, nodes);
+		return new VehicleRoute(vehicle, paths);
 	}
 	
 	/**
@@ -316,7 +316,7 @@ public class VehiclePathFinder
 		for(int i = 0; i < paths.length; i++)
 		{
 			// get departure time
-			double departureTime = nodes[0].departureTime;
+			double departureTime = nodes[i].departureTime;
 			
 			if (i > 0)
 			{
@@ -400,7 +400,7 @@ public class VehiclePathFinder
 			return null;
 		else
 		{
-			VehicleRoute aRoute = new VehicleRoute(vehicle, paths, nodes);
+			VehicleRoute aRoute = new VehicleRoute(vehicle, paths);
 
 			ArrayList<AbstractRequest> unplanedRequests = new ArrayList<AbstractRequest>();
 			unplanedRequests.addAll(unplanedParcelRequests);
@@ -410,6 +410,7 @@ public class VehiclePathFinder
 			// total shortest distance for parcel requests
 			double parcelDistance = 0;
 			
+			// calculate direct distance for new people request and parcels request
 			for (AbstractRequest request: unplanedRequests)
 			{
 				VrpPathWithTravelData tempPath = this.pathCalculator.calcPath(request.getFromLink(), 
@@ -439,7 +440,8 @@ public class VehiclePathFinder
 					
 			aRoute.setShortestPeopleDistance(peopleDistance);
 			aRoute.setShortestParcelDistance(parcelDistance);
-			// transportation cost
+			
+			// calculate benefit
 			double transCost = costCalculator.getCost(aRoute);
 			aRoute.setCost(transCost);
 			
