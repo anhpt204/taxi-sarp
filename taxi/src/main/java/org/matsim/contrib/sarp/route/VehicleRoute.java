@@ -31,7 +31,7 @@ public class VehicleRoute
 	// current parcels on this vehicle
 	private ArrayList<AbstractRequest> parcelRequests;
 	
-	private PathNode[] nodes;
+	//private PathNode[] nodes;
 	
 	private VehiclePath[] paths;
 	
@@ -92,12 +92,11 @@ public class VehicleRoute
 	 * @param vehicle
 	 * @param paths
 	 */
-	public VehicleRoute(Vehicle vehicle, VehiclePath[] paths, PathNode[] nodes)
+	public VehicleRoute(Vehicle vehicle, VehiclePath[] paths)
 	{
 		// TODO Auto-generated constructor stub
 		this.vehicle = vehicle;
 		this.paths = paths;
-		this.nodes = nodes;
 		this.peopleRequests = null;
 		this.parcelRequests = null;
 	}
@@ -126,7 +125,9 @@ public class VehicleRoute
 		
 		for (VehiclePath p: paths)
 		{
-			Id<Request> requestId = p.request.getId();
+			Id<Request> requestId = null;
+			if(p.request != null)
+				requestId = p.request.getId();
 
 			if (p.taskType == TaxiTaskType.PARCEL_PICKUP_DRIVE
 					|| p.taskType == TaxiTaskType.PARCEL_PICKUP_DRIVE)
@@ -242,20 +243,4 @@ public class VehicleRoute
 		return paths[paths.length-1];
 	}
 
-
-	public PathNode[] getNodes()
-	{
-		return nodes;
-	}
-
-
-	public void setNodes(PathNode[] nodes)
-	{
-		this.nodes = nodes;
-	}
-	
-	public PathNode getLastPathNode()
-	{
-		return nodes[nodes.length-1];
-	}
 }

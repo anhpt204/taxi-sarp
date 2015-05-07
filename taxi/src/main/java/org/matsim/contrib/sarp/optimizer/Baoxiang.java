@@ -115,7 +115,7 @@ public class Baoxiang extends AbstractTaxiOptimizer
 			{				
 				// get schedule of this vehicle
 				Schedule<TaxiTask> schedule = TaxiSchedules.getSchedule(feasibleVehicle);
-				// insert people to the route of the vehicle
+				// append people to the route of the vehicle
 				optimConfig.scheduler.appendPeopleRequest(schedule, peopleRequest);
 				
 				ArrayList<AbstractRequest> parcels = new ArrayList<AbstractRequest>();
@@ -128,11 +128,19 @@ public class Baoxiang extends AbstractTaxiOptimizer
 						MAXSEARCHES, COOLING_RATE, PathCostCalculators.TOTAL_BENEFIT);
 				if(bestRoute != null)
 				{
+					// remove remaining tasks
+					optimConfig.scheduler.removeUnservedTasks(feasibleVehicle);
+					
 					//then build schedule for this vehicle
 					optimConfig.scheduler.scheduleRequests(bestRoute);
+					
 					//and then remove all parcel request from unplannedParcelRequests
-					for(AbstractRequest p: bestRoute.getParcelRequests())
-						unplannedParcelRequests.remove(p);
+					for(VehiclePath p: bestRoute.getPaths())
+					{
+						if(p.taskType == TaxiTaskType.PARCEL_PICKUP_DRIVE)
+							unplannedParcelRequests.remove(p.request);
+					}
+					
 					// and remove peopleRequest and feasibleVehicle
 					//unplannedPeopleRequests.remove(peopleRequest);
 					plannedPeopleRequest.add(peopleRequest);
@@ -210,11 +218,17 @@ public class Baoxiang extends AbstractTaxiOptimizer
 			newPathNode.addAll(pathNodes);
 			
 			ArrayList<PathNode> bestPathNode = new ArrayList<PathNode>();
+			bestPathNode.addAll(pathNodes);
+			
 			double bestBenefit = 0;
+			int start_i = 0;
+			
+			if (pathNodes.get(0).type == PathNodeType.START)
+				start_i = start_i + 1;
 			
 			for (AbstractRequest request: unplanedRequests)
 			{
-				for(int i = 0; i < size; i++)
+				for(int i = start_i; i < size; i++)
 				{
 					// add a new pickup at i
 					newPathNode.add(i, new PathNode(request.getFromLink(), request,
@@ -232,7 +246,7 @@ public class Baoxiang extends AbstractTaxiOptimizer
 								newPathNode, 
 								unplanedRequests,
 								unservedPeopleRequests,
-								PathCostCalculators.TOTAL_BENEFIT);
+								costCalculator);
 						
 						// calculate total benefits if route is feasible
 						if(route.isFeasible())
@@ -272,51 +286,69 @@ public class Baoxiang extends AbstractTaxiOptimizer
 			ArrayList<AbstractRequest> requests, ArrayList<AbstractRequest> unservedPeopleRequests)
 	{
 		Schedule<TaxiTask> schedule = TaxiSchedules.getSchedule(vehicle);
-		// get already tasks in schedule 
-		List<TaxiTask> unservedTasks = TaxiSchedules.getUnservedTasks(schedule);
+		// the first node is at the end of current task
+		TaxiTask currentTask = schedule.getCurrentTask();
+
+		
+		// get unserved DRIVE tasks in the schedule (from next task to the end)
+		List<TaxiTask> unservedDriveTasks = TaxiSchedules.getUnservedDriveTasks(schedule);
 
 		ArrayList<PathNode> pathNodes = new ArrayList<PathNode>();
 		
-		
-		for (TaxiTask task : unservedTasks)
+		switch (currentTask.getTaxiTaskType())
+		{	
+		case WAIT_STAY:
+		case STRATEGIC_WAIT_STAY:
+			pathNodes.add(new PathNode(currentTask.getFromLink(), null, PathNodeType.START, currentTask.getEndTime()));			
+			break;
+
+		case PEOPLE_PICKUP_DRIVE:
+		case PEOPLE_PICKUP_STAY:
+		case PARCEL_PICKUP_DRIVE:
+		case PARCEL_PICKUP_STAY:
+		case DUMMY_PICKUP_DRIVE:
+			TaxiTaskWithRequest currentRequestTask = (TaxiTaskWithRequest)currentTask;
+			AbstractRequest request = currentRequestTask.getRequest();
+			pathNodes.add(new PathNode(request.getFromLink(), request, PathNodeType.PICKUP, currentTask.getEndTime()));
+			break;
+			
+		default:
+			TaxiTaskWithRequest currentDropoffTask = (TaxiTaskWithRequest)currentTask;
+			AbstractRequest r = currentDropoffTask.getRequest();
+			pathNodes.add(new PathNode(r.getToLink(), r, PathNodeType.DROPOFF, currentTask.getEndTime()));
+			
+			break;
+		}
+
+		// add node (end node) for each tasks
+		for (TaxiTask task : unservedDriveTasks)
 		{
-			
-			if(task.getTaxiTaskType() == TaxiTaskType.CRUISE_DRIVE
-				|| task.getTaxiTaskType() == TaxiTaskType.WAIT_STAY)
-				continue;
-			// if this task is stay task then ignore
-			if(task.getType() == TaskType.STAY)
-				continue;
-			
+									
 			TaxiTaskWithRequest unservedTask = (TaxiTaskWithRequest)task;
+			AbstractRequest request = unservedTask.getRequest(); 
 			
-			
-			PathNodeType type = PathNodeType.PICKUP; 
-			if (unservedTask.getTaxiTaskType() == TaxiTaskType.PARCEL_DROPOFF_DRIVE
-					|| unservedTask.getTaxiTaskType() == TaxiTaskType.PEOPLE_DROPOFF_DRIVE)
-				type = PathNodeType.DROPOFF;
-			
-			// if have a pickup task than insert request of this task into set of requests
-			if(type == PathNodeType.PICKUP)
+			switch (unservedTask.getTaxiTaskType())
 			{
-				if (unservedTask.getRequest().getType() == RequestType.PARCEL)
-					requests.add(unservedTask.getRequest());
-				else if (unservedTask.getRequest().getType() == RequestType.PEOPLE) {
-					unservedPeopleRequests.add(unservedTask.getRequest());
-				}
-			}
-			if(pathNodes.isEmpty())
-				pathNodes.add(new PathNode(unservedTask.getFromLink(), 
-						null, 
-						PathNodeType.START, unservedTask.getBeginTime()));
-			
-			if(type == PathNodeType.PICKUP)
-				pathNodes.add(new PathNode(unservedTask.getRequest().getFromLink(), 
-						unservedTask.getRequest(), type, 0));
-			else {
-				pathNodes.add(new PathNode(unservedTask.getRequest().getToLink(),
-				unservedTask.getRequest(), type, 0));
-			}
+			case PEOPLE_PICKUP_DRIVE:
+			case PARCEL_PICKUP_DRIVE:
+				pathNodes.add(new PathNode(request.getFromLink(), request, 
+						PathNodeType.PICKUP, 0));
+
+				// if have a pickup task than insert request of this task into set of requests
+				
+				if (request.getType() == RequestType.PARCEL)
+					requests.add(request);
+				else if (request.getType() == RequestType.PEOPLE) 
+					unservedPeopleRequests.add(request);
+				
+				break;
+
+			default: // dropoff
+				pathNodes.add(new PathNode(request.getToLink(), request, 
+						PathNodeType.DROPOFF, 0));
+				break;
+			}					
+				
 		}
 		
 		return pathNodes;
@@ -398,7 +430,7 @@ public class Baoxiang extends AbstractTaxiOptimizer
 			}
 			
 			// if not any more request selected
-			if(removeRequest == null && !unplannedParcelRequests.isEmpty())
+			if(removeRequest == null && unplannedParcelRequests.isEmpty())
 				continue;
 			
 			// remove it			
@@ -428,6 +460,9 @@ public class Baoxiang extends AbstractTaxiOptimizer
 				double x = Math.log(0.5);
 				T = (route.getTotalBenefit()-bestRoute.getTotalBenefit()) / x;
 			}
+			
+			if(acceptanceProbability(bestRoute.getTotalBenefit(), route.getTotalBenefit(), T))
+				bestRoute = route;
 		}
 		return bestRoute;
 		
