@@ -1,5 +1,6 @@
 package org.matsim.contrib.sarp.optimizer;
 
+import java.util.ArrayList;
 import java.util.Collection;
 
 import org.matsim.contrib.dvrp.data.Request;
@@ -21,6 +22,7 @@ public abstract class AbstractTaxiOptimizer
 
 	protected final Collection<AbstractRequest> unplannedPeopleRequests;
 	protected final Collection<AbstractRequest> unplannedParcelRequests;
+	protected ArrayList<AbstractRequest> rejectedPeopleRequests;
 
 	protected boolean requiresReoptimization = false;
 
@@ -31,6 +33,8 @@ public abstract class AbstractTaxiOptimizer
 		this.optimConfig = optimConfig;
 		this.unplannedPeopleRequests = unplannedPeopleRequests;
 		this.unplannedParcelRequests = unplannedParcelRequests;
+		
+		rejectedPeopleRequests = new ArrayList<AbstractRequest>();
 	}
 	
 	
@@ -102,10 +106,28 @@ public abstract class AbstractTaxiOptimizer
 	public void notifyMobsimBeforeSimStep(MobsimBeforeSimStepEvent e) {
 		if(requiresReoptimization)
 		{
+			System.err.println("optimizing: " + this.unplannedPeopleRequests.size() + " people and " + this.unplannedParcelRequests.size() + " parcels");
+//			for(AbstractRequest r : unplannedPeopleRequests)
+//				r.println();
+//			for(AbstractRequest r: unplannedParcelRequests)
+//				r.println();
+//			
 			scheduleUnplannedRequests();
 			requiresReoptimization = false;
 		}
 		
+	}
+
+
+	public ArrayList<AbstractRequest> getRejectedPeopleRequests()
+	{
+		return rejectedPeopleRequests;
+	}
+
+
+	public void setRejectedPeopleRequests(ArrayList<AbstractRequest> rejectedPeopleRequests)
+	{
+		this.rejectedPeopleRequests = rejectedPeopleRequests;
 	}
 
 }

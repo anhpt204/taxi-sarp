@@ -66,11 +66,14 @@ public class Launcher
 	private LeastCostPathCalculatorWithCache routerWithCache;
 	private VrpPathCalculator pathCalculator;
 	
+	private final int TIME_STEP = 1; //seconds
+
 	public Launcher(LauncherParams params)
 	{
 		this.params = params;
 		//initialize a scenario
 		this.scenario = VrpLauncherUtils.initScenario(params.netFile, params.plansFile);
+		
 		
 		Map<Id<Link>, ? extends Link> links = this.scenario.getNetwork().getLinks();
 		
@@ -149,11 +152,10 @@ public class Launcher
 		//PassengerEngine passengerEngine = VrpLauncherUtils.initPassengerEngine(RequestCreator.MODE, new RequestCreator(), 
 		//		optimizer, contextImpl, qsim);
 		//init SSARPassengerEnggine
-		int timeStep = 10; //seconds
 		SARPassengerEngine passengerEngine = new SARPassengerEngine(RequestCreator.MODE,
 				new RequestCreator(), optimizer, contextImpl, 
 				VrpUtilities.getRequestEntry(params.taxiCustomersFile, contextImpl), 
-				qsim, timeStep);
+				qsim, TIME_STEP);
 		
 		qsim.addMobsimEngine(passengerEngine);
 		qsim.addDepartureHandler(passengerEngine);

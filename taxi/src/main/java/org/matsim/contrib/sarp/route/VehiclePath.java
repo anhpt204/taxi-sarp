@@ -36,5 +36,9 @@ public class VehiclePath
 		
 	}
 	
+	public String toString()
+	{
+		return " " + taskType;
+	}
 
 }

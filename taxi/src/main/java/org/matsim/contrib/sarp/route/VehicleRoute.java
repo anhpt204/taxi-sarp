@@ -242,5 +242,18 @@ public class VehicleRoute
 	{
 		return paths[paths.length-1];
 	}
+	
+	public String toString()
+	{
+		String r = vehicle.getId() + ": ";
+		for(VehiclePath p: paths)
+		{
+			r += p.toString() + " --> ";
+		}
+		
+		r += " total benefit: " + totalBenefit;
+		
+		return r;
+	}
 
 }
