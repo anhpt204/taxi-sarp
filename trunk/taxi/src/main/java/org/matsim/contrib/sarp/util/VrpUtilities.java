@@ -23,7 +23,11 @@ import java.util.Random;
 import java.util.Set;
 import java.util.concurrent.PriorityBlockingQueue;
 
+import javax.swing.JComboBox.KeySelectionManager;
+
+import org.apache.poi.hssf.record.formula.functions.Links;
 import org.matsim.api.core.v01.Id;
+import org.matsim.api.core.v01.network.Link;
 import org.matsim.api.core.v01.population.Activity;
 import org.matsim.api.core.v01.population.Leg;
 import org.matsim.api.core.v01.population.Person;
@@ -153,5 +157,25 @@ public class VrpUtilities
         catch (IOException e) {
             throw new RuntimeException(e);
         }
+    }
+    
+    public void generateTaxi(MatsimVrpContext context, int numVehicles)
+    {
+    	Random rand = new Random();
+    	rand.setSeed(1000);
+    	Map<Id<Link>, ? extends Link> links = context.getScenario().getNetwork().getLinks();
+    	
+    	Id<Link>[] keys = (Id<Link>[])links.keySet().toArray();
+    	
+    	int numLinks = links.size();
+    	
+    	for (int i = 0; i < numVehicles; i++)
+    	{
+    		//randomly get start location of vehicle
+    		int l = rand.nextInt(numLinks);
+    		Id<Link> linkId = keys[l];
+    		
+    		// chua xong
+    	}
     }
 }

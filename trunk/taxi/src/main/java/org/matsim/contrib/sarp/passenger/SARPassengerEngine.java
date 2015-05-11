@@ -163,7 +163,7 @@ public class SARPassengerEngine
 
 		
 		AbstractRequest request = (AbstractRequest) requestCreator.createRequest(id, passenger, fromLink, toLink, entry.getSubmissionTime(),
-				entry.getEarlyDeliveryTime(), entry.getLatePickupTime(), entry.getEarlyDeliveryTime(), entry.getLateDeliveryTime(), 
+				entry.getEarlyPickupTime(), entry.getLatePickupTime(), entry.getEarlyDeliveryTime(), entry.getLateDeliveryTime(), 
 				entry.getMaxTravelDistance(), entry.getMaxNbStops());
 		
 		this.context.getVrpData().addRequest(request);
@@ -174,7 +174,7 @@ public class SARPassengerEngine
 	public void doSimStep(double time)
 	{
 		//before taking system snapshot
-		if(time < preTimeSnapshot + timeStep)
+		if(time <= preTimeSnapshot + timeStep)
 		{
 			//add all requests that have been submitted
 			boolean cont = true;

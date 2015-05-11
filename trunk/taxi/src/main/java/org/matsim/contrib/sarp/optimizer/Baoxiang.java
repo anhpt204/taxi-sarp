@@ -46,11 +46,11 @@ import com.google.common.base.CaseFormat;
 public class Baoxiang extends AbstractTaxiOptimizer
 {
 
-	private static final int MAXSIZEROUTE = 6;
+	private static final int MAXSIZEROUTE = 12;
 	private static final int MAXITERATIONSFORBIDDEN = 5;
 	
 	// parameters for simulated annealing
-	private static final int MAXSEARCHES = 1000;
+	private static final int MAXSEARCHES = 10;
 	//private static final double INIT_TEMPERATURE = 1000;
 	private static final double COOLING_RATE = 0.99;
 
@@ -109,7 +109,10 @@ public class Baoxiang extends AbstractTaxiOptimizer
 			{
 				// rejection
 				//unplannedPeopleRequests.remove(peopleRequest);
-				plannedPeopleRequest.add(peopleRequest);
+				//plannedPeopleRequest.add(peopleRequest);
+				rejectedPeopleRequests.add(peopleRequest);
+				System.err.println("Reject: " + peopleRequest.getId());
+				
 			}
 			else 
 			{				
@@ -134,6 +137,7 @@ public class Baoxiang extends AbstractTaxiOptimizer
 					//then build schedule for this vehicle
 					optimConfig.scheduler.scheduleRequests(bestRoute);
 					
+					System.err.println("best route: " + bestRoute.toString());
 					//and then remove all parcel request from unplannedParcelRequests
 					for(VehiclePath p: bestRoute.getPaths())
 					{
@@ -210,8 +214,11 @@ public class Baoxiang extends AbstractTaxiOptimizer
 	{
 		
 		// insert new task
-		while (!unplanedRequests.isEmpty() && pathNodes.size() < MAXSIZEROUTE)
+		int numTrails = 0;
+		while (!unplanedRequests.isEmpty() && numTrails < MAXSIZEROUTE)
 		{
+			numTrails += 1;
+			
 			int size = pathNodes.size();
 			ArrayList<PathNode> newPathNode = new ArrayList<PathNode>();
 			// deep clone
@@ -241,6 +248,7 @@ public class Baoxiang extends AbstractTaxiOptimizer
 						newPathNode.add(j, new PathNode(request.getToLink(), request,
 								PathNodeType.DROPOFF, request.getLateDeliveryTime()));
 
+						newPathNode.get(0).departureTime = optimConfig.context.getTime();
 						// make a route
 						VehicleRoute route = optimConfig.vrpFinder.getRouteAndCalculateCost(vehicle, 
 								newPathNode, 
@@ -463,6 +471,8 @@ public class Baoxiang extends AbstractTaxiOptimizer
 			
 			if(acceptanceProbability(bestRoute.getTotalBenefit(), route.getTotalBenefit(), T))
 				bestRoute = route;
+			
+			T = T*COOLING_RATE;
 		}
 		return bestRoute;
 		
@@ -471,7 +481,8 @@ public class Baoxiang extends AbstractTaxiOptimizer
 	
 	private boolean acceptanceProbability(double oldBenefit, double newBenefit, double T)
 	{
-		double alpha = Math.exp(newBenefit - oldBenefit) / T;
+		double alpha = Math.exp((newBenefit - oldBenefit) / T);
+		alpha = Math.min(alpha, 1);
 		
 		return alpha > Math.random();
 	}

@@ -213,5 +213,14 @@ public class AbstractRequest extends RequestImpl
 	{
 		return earlyDeliveryTime;
 	}
+	
+	public void println()
+	{
+		String x = "";
+		x += type + ": from " + fromLink.getId() + " in [" + super.getT0() + ", " + super.getT1() + "] to ";
+		x += toLink.getId() + " in [" + earlyDeliveryTime + ", " + lateDeliveryTime + "]";
+		
+		System.err.println(x);
+	}
 
 }
