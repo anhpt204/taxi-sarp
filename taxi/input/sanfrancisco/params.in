@@ -8,7 +8,7 @@ plansFile          request_day_1.xml
 taxiCustomersFile      request_day_1.txt
 
 #taxicabs (25 of 50)
-taxisFile              taxi-25.xml
+taxisFile              taxi.xml
 
 #taxiranks (currently 0)
 #ranksFile              taxi_ranks-0.xml
