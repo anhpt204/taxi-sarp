@@ -129,5 +129,5 @@ public abstract class AbstractTaxiOptimizer
 	{
 		this.rejectedPeopleRequests = rejectedPeopleRequests;
 	}
-
+	
 }

@@ -487,4 +487,24 @@ public class Baoxiang extends AbstractTaxiOptimizer
 		return alpha > Math.random();
 	}
 
+	/* (non-Javadoc)
+	 * @see org.matsim.contrib.sarp.optimizer.TaxiOptimizer#getNumberOfRejectedPeopleRequests()
+	 */
+	@Override
+	public int getNumberOfRejectedPeopleRequests()
+	{
+		// TODO Auto-generated method stub
+		return rejectedPeopleRequests.size();
+	}
+
+	/* (non-Javadoc)
+	 * @see org.matsim.contrib.sarp.optimizer.TaxiOptimizer#getNumberOfUnServedParcelRequests()
+	 */
+	@Override
+	public int getNumberOfUnServedParcelRequests()
+	{
+		// TODO Auto-generated method stub
+		return unplannedParcelRequests.size();
+	}
+
 }
