@@ -228,6 +228,9 @@ public class Launcher
         //    cacheStats.updateStats(routerWithCache);
         //}
 		
+        System.err.println("number of rejected people requests: " + optimizer.getNumberOfRejectedPeopleRequests());
+        System.err.println("number of unserved parcel requests: " + optimizer.getNumberOfUnServedParcelRequests());
+
 	}
 	private TaxiOptimizerConfiguration createOptimizerConfig() 
 	{
